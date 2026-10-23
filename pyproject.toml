@@ -9,6 +9,9 @@ authors = [{ name = "Karl Preisner" }]
 requires-python = ">=3.11"
 dependencies = []
 
+[project.scripts]
+chip = "chip.cli:main"
+
 [dependency-groups]
 dev = ["ruff>=0.17", "mypy>=2.4", "pytest>=9.0"]
 bench = [
