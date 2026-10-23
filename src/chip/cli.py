@@ -1,4 +1,4 @@
-"""Command-line interface: `chip hash`, `chip verify`, and `chip trace`.
+"""Command-line interface: `chip hash` and `chip verify`.
 
 Passwords can be passed as an argument, but are prompted for (without echo) when
 omitted, so they don't end up in shell history.
@@ -6,21 +6,20 @@ omitted, so they don't end up in shell history.
 
 import argparse
 import getpass
-import secrets
+import logging
 import sys
 
 from chip.core import HASH_FUNCS, Chip
-from chip.passwords import SALT_BYTES, hash_password, verify
+from chip.passwords import hash_password, verify
 
 EPILOG = """\
-options:
-  hash   -b, --bits N  -c, --collisions N  --hash NAME  --min N  --max N
-  trace  -b, --bits N  -c, --collisions N  --hash NAME
+options for hash:
+  -b, --bits N  -c, --collisions N  --hash NAME  --min N  --max N  -v, --verbose
 
 examples:
   chip hash hunter2 -b 20 --max 4000
+  chip hash hunter2 -b 20 --max 4000 -v
   chip verify "$HASH" hunter2
-  chip trace hunter2 -b 20
 
 Run `chip <command> --help` for details."""
 
@@ -42,14 +41,20 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _hash(args: argparse.Namespace) -> int:
-    chip = Chip(
-        bits=args.bits,
-        collisions=args.collisions,
-        min_iterations=args.min_iterations,
-        max_iterations=args.max_iterations,
-        hash_func=HASH_FUNCS[args.hash_name],
-    )
-    print(hash_password(_password(args, confirm=True), chip))
+    chip = _chip(args)
+    password = _password(args, confirm=True)
+    # -v: show the library's debug log (attempts, salts, collisions) on stderr, so
+    # stdout still carries only the hash. Times are ms since the program started.
+    handler = logging.StreamHandler(sys.stderr)
+    handler.setFormatter(logging.Formatter("%(relativeCreated)9.1f ms  %(message)s"))
+    package_logger = logging.getLogger("chip")
+    if args.verbose:
+        package_logger.addHandler(handler)
+        package_logger.setLevel(logging.DEBUG)
+    try:
+        print(hash_password(password, chip))
+    finally:
+        package_logger.removeHandler(handler)
     return 0
 
 
@@ -59,16 +64,14 @@ def _verify(args: argparse.Namespace) -> int:
     return 0 if matched else 1
 
 
-def _trace(args: argparse.Namespace) -> int:
-    chip = Chip(bits=args.bits, collisions=args.collisions, hash_func=HASH_FUNCS[args.hash_name])
-    salt = secrets.token_bytes(SALT_BYTES)
-    chain = chip.compute(salt + _password(args).encode("utf-8"), bounded=False)
-    print(f"salt        {salt.hex()}")
-    for n, iteration in enumerate(chain.collision_iterations, start=1):
-        print(f"collision {n:<2} at iteration {iteration:,}")
-    print(f"total       {chain.iterations:,} iterations")
-    print(f"digest      {chain.digest.hex()}")
-    return 0
+def _chip(args: argparse.Namespace) -> Chip:
+    return Chip(
+        bits=args.bits,
+        collisions=args.collisions,
+        min_iterations=args.min_iterations,
+        max_iterations=args.max_iterations,
+        hash_func=HASH_FUNCS[args.hash_name],
+    )
 
 
 def _password(args: argparse.Namespace, confirm: bool = False) -> str:
@@ -90,10 +93,9 @@ def _parser() -> argparse.ArgumentParser:
     )
     commands = parser.add_subparsers(required=True, metavar="command")
 
-    # Chain options shared by `hash` and `trace`; defaults come from Chip.
-    defaults = Chip()
-    params = argparse.ArgumentParser(add_help=False)
-    params.add_argument(
+    hash_cmd = commands.add_parser("hash", help="hash a password")
+    defaults = Chip()  # option defaults come from Chip
+    hash_cmd.add_argument(
         "-b",
         "--bits",
         type=int,
@@ -101,7 +103,7 @@ def _parser() -> argparse.ArgumentParser:
         metavar="N",
         help="low bits compared (default: %(default)s)",
     )
-    params.add_argument(
+    hash_cmd.add_argument(
         "-c",
         "--collisions",
         type=int,
@@ -109,7 +111,7 @@ def _parser() -> argparse.ArgumentParser:
         metavar="N",
         help="collisions before stopping (default: %(default)s)",
     )
-    params.add_argument(
+    hash_cmd.add_argument(
         "--hash",
         dest="hash_name",
         choices=list(HASH_FUNCS),
@@ -117,10 +119,7 @@ def _parser() -> argparse.ArgumentParser:
         metavar="NAME",
         help="hash function: %(choices)s (default: %(default)s)",
     )
-
-    # Iteration bounds only matter for `hash`, which redraws salts outside them.
-    bounds = argparse.ArgumentParser(add_help=False)
-    bounds.add_argument(
+    hash_cmd.add_argument(
         "--min",
         dest="min_iterations",
         type=int,
@@ -128,7 +127,7 @@ def _parser() -> argparse.ArgumentParser:
         metavar="N",
         help="reject salts that finish sooner (default: %(default)s)",
     )
-    bounds.add_argument(
+    hash_cmd.add_argument(
         "--max",
         dest="max_iterations",
         type=int,
@@ -136,7 +135,12 @@ def _parser() -> argparse.ArgumentParser:
         metavar="N",
         help="reject salts that take longer (default: %(default)s)",
     )
-    hash_cmd = commands.add_parser("hash", parents=[params, bounds], help="hash a password")
+    hash_cmd.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="log each salt attempt and collision, with elapsed time, to stderr",
+    )
     hash_cmd.add_argument("password", nargs="?", help="prompted for if omitted")
     hash_cmd.set_defaults(command=_hash)
 
@@ -146,12 +150,6 @@ def _parser() -> argparse.ArgumentParser:
     verify_cmd.add_argument("hash", help="stored hash string from `chip hash`")
     verify_cmd.add_argument("password", nargs="?", help="prompted for if omitted")
     verify_cmd.set_defaults(command=_verify)
-
-    trace_cmd = commands.add_parser(
-        "trace", parents=[params], help="show when each collision happens for one chain"
-    )
-    trace_cmd.add_argument("password", nargs="?", help="prompted for if omitted")
-    trace_cmd.set_defaults(command=_trace)
 
     return parser
 

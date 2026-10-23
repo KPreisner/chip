@@ -71,19 +71,6 @@ def test_unreachable_bounds_exit_2(capsys: pytest.CaptureFixture[str]) -> None:
     assert "no salt met the iteration bounds" in capsys.readouterr().err
 
 
-def test_trace_has_no_bounds_options() -> None:
-    with pytest.raises(SystemExit):
-        main(["trace", "pw", "--max", "4000"])
-
-
-def test_trace(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["trace", "pw", "-b", "12", "-c", "3"]) == 0
-    out = capsys.readouterr().out
-    assert out.count("collision ") == 3
-    assert "total" in out
-    assert "digest" in out
-
-
 def test_invalid_parameters_exit_2(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["hash", "pw", "--bits", "99"]) == 2
     assert "bits must be in" in capsys.readouterr().err
@@ -97,3 +84,21 @@ def test_malformed_hash_exits_2(capsys: pytest.CaptureFixture[str]) -> None:
 def test_unknown_hash_rejected_by_argparse() -> None:
     with pytest.raises(SystemExit):
         main(["hash", "pw", "--hash", "crc32"])
+
+
+def test_verbose_logs_attempts_to_stderr(capsys: pytest.CaptureFixture[str]) -> None:
+    # b = 12, C = 5 averages about 200 iterations, so max = 200 forces some retries.
+    assert main(["hash", "pw", "-b", "12", "--max", "200", "-v"]) == 0
+    captured = capsys.readouterr()
+    assert "attempt 1: salt " in captured.err
+    assert "collision 1 at iteration" in captured.err
+    assert "accepted:" in captured.err
+    assert " ms  " in captured.err  # elapsed-time column
+    # stdout carries only the hash, so HASH=$(chip hash ... -v) still works.
+    assert captured.out.count("\n") == 1
+    assert verify("pw", captured.out.strip())
+
+
+def test_quiet_by_default(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["hash", "pw", *FAST]) == 0
+    assert capsys.readouterr().err == ""

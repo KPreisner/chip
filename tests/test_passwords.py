@@ -1,4 +1,5 @@
 import base64
+import logging
 from collections.abc import Callable
 from typing import Any
 
@@ -139,3 +140,21 @@ def test_surrounding_whitespace_is_ignored() -> None:
     encoded = hash_password("pw", FAST)
     assert verify("pw", encoded + "\n")
     assert verify("pw", "  " + encoded)
+
+
+def test_hash_password_logs_retries(caplog: pytest.LogCaptureFixture) -> None:
+    # 5 collisions within 200 iterations at b = 12 fails about half the time.
+    with caplog.at_level(logging.DEBUG, logger="chip"):
+        for i in range(10):
+            hash_password(f"pw{i}", Chip(bits=12, collisions=5, max_iterations=200))
+    messages = [r.getMessage() for r in caplog.records]
+    assert any(m.startswith("attempt 1: salt ") for m in messages)
+    assert any("rejected: only" in m for m in messages)
+    assert sum("accepted:" in m for m in messages) == 10
+
+
+def test_min_iterations_rejection_is_logged(caplog: pytest.LogCaptureFixture) -> None:
+    chip = Chip(bits=16, collisions=1, min_iterations=1_000_000, max_iterations=1_000_000)
+    with caplog.at_level(logging.DEBUG, logger="chip"):
+        assert chip.run("pw", b"0" * 16) is None
+    assert "below min_iterations" in caplog.text

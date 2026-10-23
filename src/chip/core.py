@@ -10,9 +10,13 @@ This module is the algorithm only. Salts, retries, and stored hash strings live 
 """
 
 import hashlib
+import logging
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
+
+# Debug-level events (collisions, rejected salts); silent unless the caller enables them.
+logger = logging.getLogger(__name__)
 
 # Hash functions CHIP accepts, by name: every fixed-size hash hashlib guarantees on all
 # platforms (shake_* is left out because its digest() needs a length). verify() uses this
@@ -119,6 +123,8 @@ class Chip:
                 seen[key] = h_int
             else:
                 collision_iterations.append(iterations)
+                n = len(collision_iterations)
+                logger.debug("  collision %d at iteration %d", n, iterations)
                 h = (h_int ^ earlier).to_bytes(len(h), "big")
 
         return Chain(hash_func(h).digest(), iterations, tuple(collision_iterations))
@@ -126,9 +132,19 @@ class Chip:
     def run(self, password: str, salt: bytes) -> Chain | None:
         """Run the chain for one salt; return None if it misses the iteration bounds."""
         chain = self.compute(salt + password.encode("utf-8"))
-        if (
-            len(chain.collision_iterations) == self.collisions
-            and self.min_iterations <= chain.iterations <= self.max_iterations
-        ):
-            return chain
-        return None
+        if len(chain.collision_iterations) < self.collisions:
+            logger.debug(
+                "  rejected: only %d of %d collisions within max_iterations (%d)",
+                len(chain.collision_iterations),
+                self.collisions,
+                self.max_iterations,
+            )
+            return None
+        if chain.iterations < self.min_iterations:
+            logger.debug(
+                "  rejected: %d iterations, below min_iterations (%d)",
+                chain.iterations,
+                self.min_iterations,
+            )
+            return None
+        return chain
