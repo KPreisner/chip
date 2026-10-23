@@ -1,5 +1,9 @@
 # CHIP: Confounding Hash Iteration for Passwords
 
+[![Lint](https://github.com/KPreisner/chip/actions/workflows/lint.yml/badge.svg)](https://github.com/KPreisner/chip/actions/workflows/lint.yml)
+[![Test](https://github.com/KPreisner/chip/actions/workflows/test.yml/badge.svg)](https://github.com/KPreisner/chip/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 CHIP is an iterated password hash I designed in 2018 in response to the
 [Password Hashing Competition](https://www.password-hashing.net). Instead of hashing a
 fixed number of times, it keeps hashing until it has seen **C** collisions among the low
@@ -90,3 +94,7 @@ The same checks run in GitHub Actions on every push and pull request.
 src/chip/       the CHIP package (standard library only)
 tests/          unit tests (pytest)
 ```
+
+## License
+
+[MIT](LICENSE)
