@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CHIP Demo</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%232a78d6'/%3E%3Cpath d='M4 5h8M4 8h8M4 11h5' stroke='white' stroke-width='1.6'/%3E%3C/svg%3E">
+<meta name="description" content="Run the CHIP password hash in your browser and watch each salt attempt and collision.">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f9f9f7;
+    --surface: #fcfcfb;
+    --border: rgba(11, 11, 11, 0.1);
+    --text: #0b0b0b;
+    --text-2: #52514e;
+    --muted: #898781;
+    --track: #e1e0d9;
+    --accent: #2a78d6;
+    --accent-ink: #ffffff;
+    --good: #0b7d0b;
+    --bad: #c23535;
+    --tick: #0b0b0b;
+    --code-bg: #f0efec;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #0d0d0d;
+      --surface: #1a1a19;
+      --border: rgba(255, 255, 255, 0.1);
+      --text: #f0efec;
+      --text-2: #c3c2b7;
+      --muted: #898781;
+      --track: #2c2c2a;
+      --accent: #3987e5;
+      --accent-ink: #ffffff;
+      --good: #2fbf2f;
+      --bad: #e66767;
+      --tick: #f0efec;
+      --code-bg: #232322;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #0d0d0d;
+    --surface: #1a1a19;
+    --border: rgba(255, 255, 255, 0.1);
+    --text: #f0efec;
+    --text-2: #c3c2b7;
+    --muted: #898781;
+    --track: #2c2c2a;
+    --accent: #3987e5;
+    --accent-ink: #ffffff;
+    --good: #2fbf2f;
+    --bad: #e66767;
+    --tick: #f0efec;
+    --code-bg: #232322;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 48px; }
+  header h1 { margin: 0 0 4px; font-size: 26px; }
+  header p { margin: 0 0 8px; color: var(--text-2); max-width: 70ch; }
+  header nav { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; }
+  a { color: var(--accent); }
+  .layout { display: grid; gap: 20px; margin-top: 24px; }
+  @media (min-width: 900px) { .layout { grid-template-columns: 340px 1fr; align-items: start; } }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    min-width: 0;
+  }
+  .card h2 { margin: 0 0 12px; font-size: 16px; }
+  label { display: block; font-weight: 600; font-size: 14px; margin: 14px 0 4px; }
+  label:first-of-type { margin-top: 0; }
+  .hint { color: var(--muted); font-size: 13px; margin: 2px 0 0; }
+  input[type="text"], input[type="number"], select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font: inherit;
+  }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  .row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 14px; }
+  .row label { margin: 0 0 4px; }
+  .row output { font-variant-numeric: tabular-nums; color: var(--text-2); }
+  .actions { display: flex; align-items: center; gap: 14px; margin-top: 18px; flex-wrap: wrap; }
+  button {
+    font: inherit;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 16px;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+  }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .check { display: inline-flex; gap: 6px; align-items: center; font-weight: 400; margin: 0; }
+  #status { margin: 14px 0 0; font-size: 14px; color: var(--text-2); min-height: 1.5em; }
+  #status.error { color: var(--bad); }
+
+  .attempt { margin-bottom: 14px; }
+  .attempt-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--text-2);
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .attempt-head code { color: var(--muted); }
+  .track {
+    position: relative;
+    height: 14px;
+    background: var(--track);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 0;
+    background: var(--accent);
+    opacity: 0.35;
+    transition: width 0.25s ease-out;
+  }
+  .attempt.rejected .fill { background: var(--bad); opacity: 0.3; }
+  .tick { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--tick); }
+  .verdict { font-size: 13px; margin-top: 4px; }
+  .verdict.ok { color: var(--good); }
+  .verdict.no { color: var(--bad); }
+  .axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin: -6px 0 14px; }
+  .empty { color: var(--muted); font-size: 14px; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin: 4px 0 16px;
+  }
+  .stat { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .stat .label { font-size: 12px; color: var(--muted); }
+  .stat .value { font-size: 20px; font-weight: 600; }
+  .stored {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .stored code, pre {
+    background: var(--code-bg);
+    border-radius: 6px;
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .stored code { flex: 1; padding: 8px 10px; overflow-wrap: anywhere; }
+  pre {
+    margin: 0;
+    padding: 12px;
+    max-height: 260px;
+    overflow: auto;
+    white-space: pre;
+  }
+  .verify { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  .verify input { flex: 1; min-width: 160px; }
+  #verify-result.ok { color: var(--good); }
+  #verify-result.no { color: var(--bad); }
+  details { margin-top: 16px; }
+  summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+  footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>CHIP: Confounding Hash Iteration for Passwords</h1>
+    <p>
+      CHIP hashes a salted password over and over until the low <b>b</b> bits of the
+      digests have repeated <b>C</b> times. A salt whose chain runs past the upper bound is
+      rejected and replaced. This page runs the real Python library in your browser;
+      nothing you type leaves this page.
+    </p>
+    <nav>
+      <a href="https://github.com/KPreisner/chip">Source on GitHub</a>
+      <a href="https://github.com/KPreisner/chip/blob/main/docs/paper.md">Paper</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+    <form class="card" id="form" autocomplete="off">
+      <h2>Parameters</h2>
+      <label for="password">Password</label>
+      <input type="text" id="password" spellcheck="false">
+
+      <label for="hash-name">Hash function</label>
+      <select id="hash-name"></select>
+
+      <div class="row"><label for="bits">Bits compared (b)</label><output id="bits-out"></output></div>
+      <input type="range" id="bits" min="8" max="28">
+      <p class="hint">Each extra bit multiplies the work by about 1.4.</p>
+
+      <div class="row"><label for="collisions">Collisions (C)</label><output id="collisions-out"></output></div>
+      <input type="range" id="collisions" min="1" max="20">
+      <p class="hint">More collisions add work, each a little less than the last.</p>
+
+      <label for="max">Max iterations</label>
+      <input type="number" id="max" min="2" max="2000000" step="1">
+      <p class="hint" id="max-hint">Salts whose chain runs longer are rejected.</p>
+
+      <div class="actions">
+        <button type="submit" class="primary" id="run" disabled>Hash</button>
+        <button type="button" id="reset">Reset to defaults</button>
+        <label class="check"><input type="checkbox" id="animate" checked> Animate</label>
+      </div>
+      <p id="status" role="status">Loading Python in your browser…</p>
+    </form>
+
+    <section class="card" aria-labelledby="attempts-title">
+      <h2 id="attempts-title">Salt attempts</h2>
+      <div id="attempts"><p class="empty">Press Hash to start. Each bar is one salt's chain, each mark a collision.</p></div>
+
+      <div id="result" hidden>
+        <div class="stats">
+          <div class="stat"><div class="label">Salt attempts</div><div class="value" id="stat-attempts"></div></div>
+          <div class="stat"><div class="label">Iterations, kept chain</div><div class="value" id="stat-kept"></div></div>
+          <div class="stat"><div class="label">Iterations, all attempts</div><div class="value" id="stat-total"></div></div>
+          <div class="stat"><div class="label">Time in browser</div><div class="value" id="stat-time"></div></div>
+        </div>
+        <label for="stored">Stored hash</label>
+        <div class="stored"><code id="stored"></code><button type="button" id="copy">Copy</button></div>
+        <form class="verify" id="verify-form" autocomplete="off">
+          <input type="text" id="verify-password" aria-label="Password to verify" placeholder="Password to verify" spellcheck="false">
+          <button type="submit">Verify</button>
+          <span id="verify-result" role="status"></span>
+        </form>
+      </div>
+
+      <details>
+        <summary>Log (same as <code>chip hash --verbose</code>)</summary>
+        <pre id="log" aria-live="polite"></pre>
+      </details>
+    </section>
+  </div>
+
+  <footer>
+    Research code, not a production password hash. For real systems, use Argon2id.
+    <span id="python-version"></span>
+  </footer>
+</main>
+
+<script>
+  const HASH_NAMES = ["md5", "sha1", "sha224", "sha256", "sha384", "sha512",
+    "sha3_224", "sha3_256", "sha3_384", "sha3_512", "blake2b", "blake2s"];
+  const $ = (id) => document.getElementById(id);
+  const fmt = (n) => Math.round(n).toLocaleString("en-US");
+
+  const DEFAULTS = { password: "hunter2", hashName: "sha256", bits: 20, collisions: 5, max: 4000 };
+
+  const select = $("hash-name");
+  for (const name of HASH_NAMES) select.add(new Option(name, name));
+
+  // Suggest max = mean + 1 standard deviation, from the committed benchmark results.
+  let stats = new Map();
+  let maxEdited = false;
+  fetch("iterations.csv")
+    .then((r) => (r.ok ? r.text() : ""))
+    .then((text) => {
+      for (const line of text.trim().split("\n").slice(1)) {
+        const [bits, c, mean, std] = line.split(",").map(Number);
+        stats.set(`${bits},${c}`, { mean, std });
+      }
+      updateParams();
+    });
+
+  function updateParams() {
+    const bits = +$("bits").value;
+    const c = +$("collisions").value;
+    $("bits-out").value = bits;
+    $("collisions-out").value = c;
+    const s = stats.get(`${bits},${c}`);
+    if (s && !maxEdited) {
+      $("max").value = Math.ceil((s.mean + s.std) / 10) * 10;
+      $("max-hint").textContent =
+        `Salts whose chain runs longer are rejected. Default: mean + 1σ (mean ${fmt(s.mean)}).`;
+    }
+  }
+  $("bits").addEventListener("input", updateParams);
+  $("collisions").addEventListener("input", updateParams);
+  $("max").addEventListener("input", () => (maxEdited = true));
+
+  // Restores the parameters (not the results). Max goes back to the benchmark-based
+  // suggestion once the CSV has loaded, or to a fixed fallback before then.
+  function resetToDefaults() {
+    $("password").value = DEFAULTS.password;
+    select.value = DEFAULTS.hashName;
+    $("bits").value = DEFAULTS.bits;
+    $("collisions").value = DEFAULTS.collisions;
+    $("max").value = DEFAULTS.max;
+    $("animate").checked = true;
+    maxEdited = false;
+    updateParams();
+  }
+  $("reset").addEventListener("click", resetToDefaults);
+  resetToDefaults();
+
+  // --- Worker: Pyodide running the chip package ---------------------------------
+  const worker = new Worker("worker.js", { type: "module" });
+  worker.onerror = (e) => setStatus(`Could not start Python: ${e.message || "worker failed to load"}`, true);
+  const queue = [];
+  let draining = false;
+  let run = null;
+
+  worker.onmessage = ({ data }) => {
+    if (data.type === "ready") {
+      $("run").disabled = false;
+      setStatus("Ready.");
+      $("python-version").textContent = `Running Python ${data.python} via Pyodide.`;
+    } else if (data.type === "fatal") {
+      setStatus(`Could not load Python: ${data.message}`, true);
+    } else if (data.type === "verified") {
+      const el = $("verify-result");
+      el.textContent = data.ok ? "match" : "no match";
+      el.className = data.ok ? "ok" : "no";
+    } else {
+      queue.push(data);
+      if (!draining) drain();
+    }
+  };
+
+  function setStatus(text, isError = false) {
+    $("status").textContent = text;
+    $("status").className = isError ? "error" : "";
+  }
+
+  // Events arrive faster than the eye can follow; with Animate on, replay them paced.
+  async function drain() {
+    draining = true;
+    while (queue.length) {
+      const event = queue.shift();
+      const delay = handle(event);
+      if ($("animate").checked && delay) await new Promise((r) => setTimeout(r, delay));
+    }
+    draining = false;
+  }
+
+  function handle(event) {
+    if (event.type === "log") return handleLog(event);
+    if (event.type === "done") {
+      finish(event);
+    } else if (event.type === "error") {
+      setStatus(event.message, true);
+      $("run").disabled = false;
+    }
+    return 0;
+  }
+
+  function handleLog({ template, args, text, ms }) {
+    $("log").textContent += `${ms.toFixed(1).padStart(9)} ms  ${text}\n`;
+    if (template.startsWith("attempt")) {
+      const [n, salt] = args;
+      run.current = addAttempt(n, salt);
+      return 250;
+    }
+    const a = run.current;
+    if (template.startsWith("collision")) {
+      const [, iteration] = args;
+      const tick = document.createElement("div");
+      tick.className = "tick";
+      tick.style.left = `${pct(iteration)}%`;
+      a.track.append(tick);
+      a.fill.style.width = `${pct(iteration)}%`;
+      return 110;
+    }
+    if (template.startsWith("rejected: only")) {
+      a.fill.style.width = "100%";
+      verdict(a, `rejected: only ${args[0]} of ${args[1]} collisions within ${fmt(args[2])} iterations`, false);
+      run.total += run.max;
+      return 350;
+    }
+    if (template.startsWith("rejected:")) {
+      a.fill.style.width = `${pct(args[0])}%`;
+      verdict(a, `rejected: finished in ${fmt(args[0])} iterations, below the minimum`, false);
+      run.total += args[0];
+      return 350;
+    }
+    if (template.startsWith("accepted")) {
+      a.fill.style.width = `${pct(args[0])}%`;
+      verdict(a, `accepted after ${fmt(args[0])} iterations`, true);
+      run.kept = args[0];
+      run.total += args[0];
+      return 250;
+    }
+    return 0;
+  }
+
+  const pct = (iteration) => Math.min(100, (100 * iteration) / run.max);
+
+  function addAttempt(n, salt) {
+    const el = document.createElement("div");
+    el.className = "attempt";
+    el.innerHTML = `
+      <div class="attempt-head"><span>Attempt ${n}</span><code>salt ${salt.slice(0, 16)}…</code></div>
+      <div class="track"><div class="fill"></div></div>
+      <div class="verdict">running…</div>`;
+    $("attempts").append(el);
+    run.attempts = n;
+    return { el, track: el.querySelector(".track"), fill: el.querySelector(".fill") };
+  }
+
+  function verdict(a, text, ok) {
+    a.el.classList.add(ok ? "accepted" : "rejected");
+    const v = a.el.querySelector(".verdict");
+    v.textContent = text;
+    v.className = `verdict ${ok ? "ok" : "no"}`;
+  }
+
+  function finish({ encoded, ms }) {
+    const axis = document.createElement("div");
+    axis.className = "axis";
+    axis.innerHTML = `<span>0</span><span>max ${fmt(run.max)} iterations</span>`;
+    $("attempts").append(axis);
+    $("stat-attempts").textContent = run.attempts;
+    $("stat-kept").textContent = fmt(run.kept);
+    $("stat-total").textContent = fmt(run.total);
+    $("stat-time").textContent = `${ms < 10 ? ms.toFixed(1) : fmt(ms)} ms`;
+    $("stored").textContent = encoded;
+    $("verify-password").value = $("password").value;
+    $("verify-result").textContent = "";
+    $("result").hidden = false;
+    $("run").disabled = false;
+    setStatus("Done.");
+  }
+
+  $("form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const max = +$("max").value;
+    run = { max, attempts: 0, kept: 0, total: 0, current: null };
+    $("attempts").replaceChildren();
+    $("log").textContent = "";
+    $("result").hidden = true;
+    $("run").disabled = true;
+    setStatus("Hashing…");
+    worker.postMessage({
+      type: "hash",
+      password: $("password").value,
+      hashName: select.value,
+      bits: +$("bits").value,
+      collisions: +$("collisions").value,
+      max,
+    });
+  });
+
+  $("verify-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    $("verify-result").textContent = "checking…";
+    $("verify-result").className = "";
+    worker.postMessage({ type: "verify", password: $("verify-password").value, encoded: $("stored").textContent });
+  });
+
+  $("copy").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText($("stored").textContent);
+      $("copy").textContent = "Copied";
+      setTimeout(() => ($("copy").textContent = "Copy"), 1200);
+    } catch {
+      $("copy").textContent = "Select and copy";
+    }
+  });
+</script>
+</body>
+</html>
