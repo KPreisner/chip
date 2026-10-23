@@ -20,14 +20,14 @@ version is in progress.
 ```
 h = salt || password
 repeat:
-    h = MD5(h)
+    h = SHA256(h)
     if low_b_bits(h) was seen before (as low_b_bits(D_j)):
         collisions += 1
         h = h XOR D_j            # perturb using the earlier digest
     else:
         remember h
 until collisions == C
-return salt, MD5(h)
+return salt, SHA256(h)
 ```
 
 - **b** sets how many bits are compared. Each extra bit roughly doubles the work.
@@ -35,19 +35,35 @@ return salt, MD5(h)
   diminishing growth.
 - If a salt needs more than an upper bound of iterations, a new random salt is drawn.
 
-With `b = 32, C = 5`, a hash takes about 200,000 iterations on average.
+With `b = 32, C = 5`, one chain takes about 200,000 iterations on average. The default upper
+bound (250,000) rejects about 15% of salts, so a full hash costs about 235,000 iterations
+including retries.
 
 ## Quick start
 
 Requires [uv](https://docs.astral.sh/uv/).
 
-> [!NOTE]
-> The implementation is being rewritten from the 2018 original. Usage examples are coming
-> soon.
-
 ```sh
 uv sync
 ```
+
+```python
+from chip import Chip, hash_password, verify
+
+stored = hash_password("hunter2")
+# '$chip$h=sha256,b=32,c=5,min=0,max=250000$SOXeJ7iDuFTAnzpA54YPoA$jtbB33Sm...'
+
+verify("hunter2", stored)  # True
+verify("hunter3", stored)  # False
+
+# Tune the cost: fewer bits = faster, more collisions = slower
+fast = Chip(bits=20, collisions=5, max_iterations=4000)
+verify("hunter2", hash_password("hunter2", fast))  # True
+```
+
+The hash string records the salt and every parameter (in the style of the
+[PHC string format](https://github.com/P-H-C/phc-string-format)), so `verify` needs only
+the password and the stored string.
 
 ## Development
 
