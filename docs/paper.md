@@ -6,21 +6,22 @@ Karl Preisner
 
 ## Abstract
 
-In 2013, an outside group ran a public [Password Hashing Competition](https://www.password-hashing.net)
-(PHC). They solicited new password hashing algorithms that, in addition to being secure,
-have parameters that can be adjusted to frustrate brute-force password recovery. We
-describe CHIP, a variant of an iterated hash with these properties. CHIP is a salted,
-iterated hash with adjustable parameters. Together with the password being hashed, the
-parameters determine how much computation time and memory the hash takes, and the
-number of iterations cannot be known without running the hash. We measure how the cost
-grows with each parameter and discuss what this design does, and does not, protect
-against.
+In 2013, a group of cryptographers launched a public
+[Password Hashing Competition](https://www.password-hashing.net) (PHC). It solicited new
+password hashing algorithms that, in addition to being secure, have parameters that can
+be adjusted to frustrate brute-force password recovery. We describe CHIP, a salted,
+iterated hash with adjustable parameters designed with these goals in mind. Together
+with the password being hashed, the parameters determine how much computation time and
+memory the hash takes, and the number of iterations cannot be known without running the
+hash. We measure how the cost grows with each parameter and discuss what this design
+does, and does not, protect against, including a time–memory tradeoff that weakens its
+memory requirement.
 
 ## Introduction
 
 Brute-force password recovery means running the password hash on a large space of
-candidate passwords. Message digest algorithms, upon which password hashes are built,
-are designed to be fast. To make each password hash more expensive to compute, the
+candidate passwords. Message digest algorithms, upon which many password hashes are
+built, are designed to be fast. To make each password hash more expensive to compute, the
 traditional approach has been to require many iterations of the message digest.
 
 The PHC proposals share a common theme: the ability to control both the time and the
@@ -33,9 +34,11 @@ memory needed to compute a password hash. They use three approaches, often toget
   parallel hardware that processes many guesses in lockstep, since threads that finish
   early sit idle while they wait for the slowest one.
 
-CHIP implements all three. While many PHC proposals contrive entirely new hashing
-algorithms, CHIP builds on an existing, well-studied hash function and applies it in a
-way that adds memory and input-dependent cost.
+CHIP uses all three, though not all to the same effect (see
+[Security discussion and limitations](#security-discussion-and-limitations)). While many
+PHC proposals design entirely new hashing algorithms, CHIP builds on an existing,
+well-studied hash function and applies it in a way that adds memory and input-dependent
+cost.
 
 ## How CHIP works
 
@@ -47,7 +50,8 @@ computes the hash recursively:
 $$D_1 = H(S \,\|\, P), \quad D_2 = H(D_1), \quad \ldots, \quad D_i = H(D_{i-1})$$
 
 We call $D_1, D_2, \ldots$ the *D-sequence*. Let $L_i$ be the low-order $b$ bits of
-$D_i$, and call $L_1, L_2, \ldots$ the *L-sequence*.
+$D_i$, and call $L_1, L_2, \ldots$ the *L-sequence*. (When a collision occurs, described
+below, $D_i$ is perturbed before the next digest is computed from it.)
 
 Because hash outputs are effectively random, we do not expect repeated values in the
 D-sequence. However, because of the birthday paradox, we expect to see duplicate values
@@ -85,11 +89,17 @@ $D_i$ by XOR-ing it with $D_j$, the full digest whose low bits it collided with:
 
 $$D_i \leftarrow D_i \oplus D_j$$
 
-This means a hasher must store the entire D-sequence, not just the L-sequence. A
-simpler perturbation that ignores $D_j$ (for example, flipping one bit) could be
-computed with only a bitmap of $2^b$ bits recording which $b$-bit values had been seen.
-The stored D-sequence is specific to the password and salt being hashed, so it cannot
-be shared between guesses.
+Because the perturbation uses the earlier full digest, a hasher must be able to
+recover any earlier $D_j$ on demand, not just recognize its low bits. The simplest way
+is to store the entire D-sequence: about 200,000 digests of 32 bytes, or about 6.4 MB,
+at the defaults. A perturbation that ignored $D_j$ (for example, flipping one bit) would
+only require storing the $b$-bit values themselves, one eighth as much at $b = 32$.
+Whatever is stored is specific to the password and salt being hashed, so it cannot be
+shared between guesses.
+
+Storing every digest is not the only way to recover $D_j$, however. The
+[time–memory tradeoff](#security-discussion-and-limitations) below reduces the memory
+needed by about four times at the cost of about 1.3% more hashing.
 
 After the last collision, CHIP hashes once more so the final perturbation affects the
 output.
@@ -98,17 +108,19 @@ output.
 
 The number of iterations varies a lot between inputs. With $b = 32$ and $C = 5$, a
 chain takes about 200,000 iterations on average, with a standard deviation of about
-45,000. For some passwords, an impractically large number of iterations could be
-needed.
+45,000. For some password and salt combinations, an impractically large number of
+iterations could be needed.
 
 To bound this, CHIP prepends a random 128-bit salt to the password. If a salt produces
 a chain longer than an upper bound, CHIP rejects it, picks a new random salt, and
-starts over with fresh state. A lower bound works the same way and keeps the cost from
-being too low for an unlucky password and salt. As with other salted hashes, the salt
-is stored as part of the result:
+starts over with fresh state. An optional lower bound (off by default) works the same
+way: it rejects salts whose chain finishes too quickly, so no password ends up with an
+unusually cheap hash. As with other salted hashes, the salt is stored as part of the
+result:
 
 ```
 function chip_hash(password, b, C, min_iterations, max_iterations):
+    # H is the chosen hash function (SHA-256 by default)
     repeat:                                   # retry with a new salt if out of bounds
         salt = 16 random bytes
         h = salt || password
@@ -116,7 +128,7 @@ function chip_hash(password, b, C, min_iterations, max_iterations):
         collisions = 0
         iterations = 0
         while collisions < C and iterations < max_iterations:
-            h = SHA256(h)
+            h = H(h)
             iterations += 1
             key = low_bits(h, b)
             if key in seen:
@@ -125,7 +137,7 @@ function chip_hash(password, b, C, min_iterations, max_iterations):
             else:
                 seen[key] = h
         if collisions == C and min_iterations <= iterations <= max_iterations:
-            return encode(salt, SHA256(h))    # final hash uses the last perturbation
+            return encode(salt, H(h))         # final hash uses the last perturbation
 ```
 
 The result is a self-describing string recording every parameter and the salt, so it
@@ -166,13 +178,22 @@ defaults ($b = 32$, $C = 5$, SHA-256):
 | Salts rejected by the default upper bound (250,000, about mean + 1σ) | about 15% |
 | Attempts per hash, including retries | about 1.2 |
 | Iterations per hash, including retries | about 235,000 |
-| Peak memory, this Python implementation | about 29 MB |
-| Memory for the raw digests alone (32 bytes each) | about 7 MB |
+| Peak memory, this Python implementation (measured) | about 28 MB |
+| Memory for the raw digests alone, 32 bytes each (calculated) | about 6.4 MB |
+| Memory with the time–memory tradeoff below (calculated) | about 1.6 MB |
 | Time per hash, this Python implementation | about 0.2 s |
 
-Any $b$ and $C$ that give a mean of around 200,000 iterations, such as $b = 32$ and
-$C = 5$, make a reasonable choice for an interactive login, with an upper bound zero
-to one standard deviations above the mean.
+Memory grows with the number of iterations. The chart below covers $b$ from 24 to 34
+and $C$ from 5 to 30, 100 chains each; the full table is in
+[`benchmarks/results/memory.md`](../benchmarks/results/memory.md).
+
+![CHIP memory by chain length](../benchmarks/results/memory.png)
+
+These defaults were chosen so that a hash takes a fraction of a second in this Python
+implementation, which keeps the examples and benchmarks quick. They are illustrative,
+not a deployment recommendation; the next section compares them with current guidance.
+Whatever $b$ and $C$ are used, an upper bound between the mean and one standard
+deviation above it keeps retries modest.
 
 ## Security discussion and limitations
 
@@ -187,9 +208,29 @@ smaller than they first appear:
 - **Cost asymmetry.** The defender pays for about 1.2 chains per hash because of salt
   retries. An attacker who has the stored hash knows the final salt and pays for
   exactly one chain per guess, which slightly favors the attacker.
-- **Memory.** About 7 MB of raw digests is small next to typical Argon2 or scrypt
-  settings (64 MB to several GB). An attacker writing in a low-level language needs
-  only those raw digests, not the overhead of a Python dictionary.
+- **Time–memory tradeoff.** An attacker does not have to store the D-sequence. It is
+  enough to store each $b$-bit value's iteration index, plus one full digest every
+  1,000 iterations as a checkpoint: when a collision needs $D_j$, replay the chain from
+  the nearest checkpoint before $j$. At the defaults this produces identical hashes
+  with about 1.3% more hashing, while cutting the memory needed from about 6.4 MB to
+  about 1.6 MB
+  ([`benchmarks/time_memory_tradeoff.py`](../benchmarks/time_memory_tradeoff.py)). The
+  saving is about four times at every size we measured, because each stored entry
+  shrinks from a 32-byte digest to an 8-byte key and index. Argon2 was designed
+  specifically to make tradeoffs like this expensive.
+- **Memory.** Even without the tradeoff, about 6.4 MB is small next to current
+  guidance:
+  [OWASP](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)
+  recommends at least 19 MiB for Argon2id, and RFC 9106 recommends 64 MiB to 2 GiB.
+  Larger parameters help only gradually, because memory grows with the iteration count:
+  at $b = 34$ and $C = 30$, about a million iterations, the digests take about 32 MB and
+  the tradeoff about 8 MB
+  ([`benchmarks/results/memory.md`](../benchmarks/results/memory.md)). An attacker
+  writing in a low-level language also avoids the overhead of a Python dictionary,
+  which is why this implementation peaks at about 28 MB at the defaults.
+- **Iterations.** About 200,000 SHA-256 calls is also modest. OWASP recommends 600,000
+  iterations of PBKDF2-HMAC-SHA256, and each of those costs two SHA-256 compressions,
+  about six times the hashing work of a CHIP chain at the defaults.
 - **Side channels.** The run time and memory access pattern depend on the password,
   which can leak information to an observer on the same machine.
   [Argon2d](https://en.wikipedia.org/wiki/Argon2) has the same weakness, and
@@ -214,23 +255,25 @@ CHIP is an interesting design to study, but for real systems, use Argon2id.
 
 A brute-force password attack requires running the password hash on a large space of
 candidate passwords. CHIP makes each run more expensive by iterating a well-studied
-hash function a number of times that depends on the password and salt, and by forcing
-every digest to be kept in memory. Its parameters, chosen by the implementer, control
-the cost, and its results are easy to verify from a self-describing hash string.
+hash function a number of times that depends on the password and salt, and by
+requiring the hasher to recover earlier digests on demand. Its parameters, chosen by
+the implementer, control the cost, and its results are easy to verify from a
+self-describing hash string.
 
 CHIP shows how a few simple ideas (birthday-paradox collisions, perturbation, and salt
-retries) combine into a tunable, memory-dependent password hash. Measured honestly, its
-memory cost is modest and its variable run time is only a partial defense against
-parallel attacks, which is why purpose-built designs like Argon2id remain the right
-choice in practice.
+retries) combine into a tunable, memory-dependent password hash. Measured honestly,
+its memory requirement can be cut by about four times through a time–memory tradeoff,
+its default iteration count is below current guidance for iteration-based hashes, and
+its variable run time is only a partial defense against parallel attacks. That is why
+purpose-built designs like Argon2id remain the right choice in practice.
 
 ## Try it
 
 `HASH_NAME` is the hash function applied on every iteration, `BITS` is $b$, the number
 of low bits compared, and `COLLISIONS` is $C$, the number of repeats that end the
 chain. `MAX_ITERATIONS` is the upper bound: a salt whose chain runs longer is rejected,
-and hashing restarts with a new salt. `chip verify` prints `match`, and `-v` logs each
-salt attempt and collision as it happens.
+and hashing restarts with a new salt. `chip verify` prints `match`, and `--verbose` logs
+each salt attempt and collision as it happens.
 
 ```sh
 uv sync
