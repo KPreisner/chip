@@ -74,25 +74,68 @@ the password and the stored string.
 `uv sync` also installs a `chip` command. Passwords are prompted for (without echo) when
 left off the command line.
 
+In this example, `HASH_NAME` is the hash function applied on every iteration, `BITS` is
+how many low bits of each digest are compared, `COLLISIONS` is how many repeats end the
+chain, and `MAX_ITERATIONS` is the upper bound: a salt whose chain runs longer is
+rejected, and hashing restarts with a new salt. `chip verify` exits with code 0 on a
+match and 1 otherwise.
+
 ```sh
-$ PASSWORD=hunter2
-$ HASH=$(uv run chip hash "$PASSWORD" -b 20 --max 4000); echo "$HASH"
+PASSWORD=hunter2
+HASH_NAME=sha256
+BITS=20
+COLLISIONS=5
+MAX_ITERATIONS=4000
+
+HASH=$(uv run chip hash "$PASSWORD" \
+  --hash "$HASH_NAME" \
+  --bits "$BITS" \
+  --collisions "$COLLISIONS" \
+  --max "$MAX_ITERATIONS")
+
+echo "$HASH"
+uv run chip verify "$HASH" "$PASSWORD"
+uv run chip verify "$HASH" hunter3
+```
+
+Output:
+
+```text
 $chip$h=sha256,b=20,c=5,min=0,max=4000$D4tvj5zpImPdw43O8TKZrA$BM3hGUyB80m/Ee2Apqlz3dCsrmtZFvydS4Qn5Mzr9GY
-
-$ uv run chip verify "$HASH" "$PASSWORD"    # exit code 0 = match
 match
-$ uv run chip verify "$HASH" hunter3        # exit code 1 = no match
 no match
+```
 
-$ uv run chip trace "$PASSWORD" -b 20       # when each collision happens
-salt        71045097a43caeb3bcad316664fb60f8
-collision 1  at iteration 3,124
-collision 2  at iteration 3,411
-collision 3  at iteration 3,551
-collision 4  at iteration 3,595
-collision 5  at iteration 3,706
-total       3,706 iterations
-digest      cc0270ebfbf89c0f1fac13ee27ac96cde3b963ba4e8ce594e86f6323481ae1f3
+Add `-v` to watch hashing happen: each salt attempt, each collision, and why a salt was
+rejected, with the time since the program started. The log goes to stderr, so
+`HASH=$(...)` still captures only the hash.
+
+```sh
+uv run chip hash "$PASSWORD" \
+  --hash "$HASH_NAME" \
+  --bits "$BITS" \
+  --collisions "$COLLISIONS" \
+  --max "$MAX_ITERATIONS" \
+  --verbose
+```
+
+Output:
+
+```text
+     11.3 ms  attempt 1: salt a0ddff62a7b9b2531ef4a6fbc508b61b
+     12.0 ms    collision 1 at iteration 1415
+     12.4 ms    collision 2 at iteration 2095
+     12.5 ms    collision 3 at iteration 2199
+     12.6 ms    collision 4 at iteration 2578
+     13.4 ms    rejected: only 4 of 5 collisions within max_iterations (4000)
+     13.4 ms  attempt 2: salt 1361852c3dcdab7c910e57ddb2240fff
+     13.8 ms    collision 1 at iteration 724
+     13.8 ms    collision 2 at iteration 835
+     13.9 ms    collision 3 at iteration 1013
+     14.1 ms    collision 4 at iteration 1233
+     14.4 ms    collision 5 at iteration 1900
+     14.5 ms    accepted: 1900 iterations
+$chip$h=sha256,b=20,c=5,min=0,max=4000$E2GFLD3Nq3yRDlfdsiQP/w$AWUuE8Zu55tWv2ajJNQ0uFxWBwjOFzsr9B2dgiVS5b0
 ```
 
 Run `uv run chip <command> --help` for all options.
@@ -107,12 +150,14 @@ Run `uv run chip <command> --help` for all options.
 | [pytest](https://docs.pytest.org/) | unit tests |
 | [Task](https://taskfile.dev/) | command shortcuts (`brew install go-task`) |
 
-```sh
-task uv-sync     # install/update the environment
-task py-lint     # ruff check + format check + mypy (same as CI)
-task py-format   # auto-format and apply safe lint fixes
-task py-test     # run unit tests (extra args pass through: task py-test -- -k verify)
-```
+| Command | What it does |
+|---|---|
+| `task uv-sync` | install/update the environment |
+| `task py-lint` | ruff check + format check + mypy (same as CI) |
+| `task py-format` | auto-format and apply safe lint fixes |
+| `task py-test` | run unit tests (extra args pass through: `task py-test -- -k verify`) |
+| `task bench` | quick benchmark run |
+| `task bench-full` | full benchmark; regenerates `benchmarks/results/` |
 
 The same checks run in GitHub Actions on every push and pull request.
 

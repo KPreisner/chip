@@ -8,12 +8,15 @@ every parameter, so `verify` needs only the password and that string.
 
 import base64
 import hmac
+import logging
 import re
 import secrets
 
 from chip.core import HASH_FUNCS, Chip
 
 SALT_BYTES = 16
+
+logger = logging.getLogger(__name__)
 
 # Strict format for stored strings: fixed key order, plain decimal numbers, base64 fields.
 _NUMBER = r"(0|[1-9][0-9]*)"
@@ -29,10 +32,12 @@ def hash_password(password: str, chip: Chip | None = None) -> str:
     `$chip$h=sha256,b=32,c=5,min=0,max=250000$<salt>$<hash>`.
     """
     chip = chip or Chip()
-    for _ in range(chip.max_attempts):
+    for attempt in range(1, chip.max_attempts + 1):
         salt = secrets.token_bytes(SALT_BYTES)
+        logger.debug("attempt %d: salt %s", attempt, salt.hex())
         chain = chip.run(password, salt)
         if chain is not None:
+            logger.debug("  accepted: %d iterations", chain.iterations)
             return _encode(chip, salt, chain.digest)
     raise RuntimeError(
         f"no salt met the iteration bounds in {chip.max_attempts} attempts; "
