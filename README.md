@@ -49,7 +49,8 @@ including retries.
 
 ## Quick start
 
-Requires [uv](https://docs.astral.sh/uv/).
+No install needed to try it: the [live demo](https://kpreisner.github.io/chip/) runs CHIP in
+your browser. To run it locally, you need [uv](https://docs.astral.sh/uv/).
 
 ```sh
 uv sync
