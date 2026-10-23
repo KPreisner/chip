@@ -4,20 +4,20 @@
 [![Test](https://github.com/KPreisner/chip/actions/workflows/test.yml/badge.svg)](https://github.com/KPreisner/chip/actions/workflows/test.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-CHIP is an iterated password hash I designed in 2018 in response to the
-[Password Hashing Competition](https://www.password-hashing.net). Instead of hashing a
-fixed number of times, it keeps hashing until it has seen **C** collisions among the low
-**b** bits of the digests. That makes the iteration count depend on the password and salt
-in a way you can't predict without running the whole chain, and it forces the hasher to
-keep every digest in memory.
+CHIP is an iterated password hash inspired by the
+[Password Hashing Competition](https://www.password-hashing.net) (2013–2015). I originally
+developed it in 2018 and revised it in 2026. Instead of hashing a fixed number of times,
+it keeps hashing until it has seen **C** collisions among the low **b** bits of the
+digests. That makes the iteration count depend on the password and salt in a way you
+can't predict without running the whole chain, and each collision mixes in an earlier
+digest, so the hasher has to be able to recover earlier digests on demand.
 
-📄 **Paper:** *Frustrating Brute-Force Password Recovery* (Karl Preisner, July 2018). A revised
-version is in progress.
+📄 **Paper:** [CHIP: Confounding Hash Iteration for Passwords](docs/paper.md), covering
+how it works, measured costs, and its security limitations.
 
 > [!WARNING]
-> This is research and portfolio code, not a production password hash. Use
-> [Argon2id](https://www.rfc-editor.org/rfc/rfc9106) for real systems. The code and paper
-> are being revisited.
+> This is research code, not a production password hash. Use
+> [Argon2id](https://www.rfc-editor.org/rfc/rfc9106) for real systems.
 
 ## How it works
 
@@ -34,7 +34,8 @@ until collisions == C
 return salt, SHA256(h)
 ```
 
-- **b** sets how many bits are compared. Each extra bit roughly doubles the work.
+- **b** sets how many bits are compared. Each extra bit multiplies the work by about
+  1.4 (√2).
 - **C** sets how many collisions to wait for. More collisions mean more iterations, with
   diminishing growth.
 - If a salt needs more than an upper bound of iterations, a new random salt is drawn.
@@ -157,15 +158,28 @@ Run `uv run chip <command> --help` for all options.
 | `task py-format` | auto-format and apply safe lint fixes |
 | `task py-test` | run unit tests (extra args pass through: `task py-test -- -k verify`) |
 | `task bench` | quick benchmark run |
-| `task bench-full` | full benchmark; regenerates `benchmarks/results/` |
+| `task bench-full` | full iteration benchmark; regenerates the `iterations.*` results |
+| `task bench-memory` | memory benchmark; regenerates the `memory.*` results |
 
 The same checks run in GitHub Actions on every push and pull request.
 
 ## Project layout
 
 ```
-src/chip/       the CHIP package (standard library only)
-tests/          unit tests (pytest)
+src/chip/
+  core.py                   the algorithm: Chip parameters, hash chain, collisions
+  passwords.py              hash_password and verify: salts, retries, stored hash strings
+  cli.py                    the `chip` command
+tests/                      unit tests (pytest)
+benchmarks/
+  iterations.py             measures iterations for every (b, C) pair
+  memory.py                 measures memory for a range of (b, C) pairs
+  time_memory_tradeoff.py   computes CHIP with about 4× less memory
+  results/                  committed results: CSV, Markdown tables, charts
+docs/
+  paper.md                  how CHIP works, measured costs, security discussion
+.github/workflows/          CI: lint, and tests on Python 3.11–3.15
+Taskfile.yml                task shortcuts (see Development)
 ```
 
 ## License
