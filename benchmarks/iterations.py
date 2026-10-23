@@ -1,14 +1,16 @@
 """Measure how many iterations CHIP takes for each combination of bits (b) and collisions (C).
 
 For each `bits` value, runs unbounded CHIP chains with random inputs and records the
-iteration count at each collision, so one run with C = 8 fills all eight columns.
+iteration count at each collision, so one run with C = 20 fills all twenty columns.
 Writes to the output directory:
 
-- iterations.csv  mean and standard deviation for every (bits, collisions) pair
-- iterations.md   Markdown tables of the means and standard deviations
-- iterations.png  mean iterations vs. bits, one line per collision count
+- iterations.csv                 mean and standard deviation for every (bits, collisions) pair
+- iterations.md                  Markdown tables of the means and standard deviations
+- iterations_by_bits.png         mean iterations vs. b, one line per selected C
+- iterations_by_collisions.png   mean iterations vs. C, one line per selected b
+- iterations_log.png             like iterations_by_bits.png, on a log scale
 
-Usage: uv run python benchmarks/iterations.py [--min-bits 10] [--max-bits 32] [--runs 1000]
+Usage: uv run python benchmarks/iterations.py [--min-bits 1] [--max-bits 32] [--collisions 20]
 """
 
 import argparse
@@ -68,25 +70,69 @@ def write_markdown(
     path.write_text("\n".join(sections))
 
 
-def plot(path: Path, means: dict[int, list[float]], collisions: int) -> None:
+def plot(out: Path, means: dict[int, list[float]], collisions: int) -> None:
+    bits = list(means)
+    # A few representative series; all values are in the tables.
+    shown_c = [c for c in (1, 2, 5, 10, 20) if c <= collisions]
+    shown_b = [b for b in range(bits[-1] - 8, bits[-1] + 1, 2) if b in means]
+    by_bits = {f"C = {c}": [means[b][c - 1] for b in bits] for c in shown_c}
+
+    line_chart(
+        out / "iterations_by_bits.png",
+        bits,
+        by_bits,
+        title="Mean iterations by bits compared (b)",
+        xlabel="Bits compared, b",
+        legend_title="Collisions",
+    )
+    line_chart(
+        out / "iterations_by_collisions.png",
+        list(range(1, collisions + 1)),
+        {f"b = {b}": means[b] for b in shown_b},
+        title="Mean iterations by collisions (C)",
+        xlabel="Collisions, C",
+        legend_title="Bits",
+    )
+    line_chart(
+        out / "iterations_log.png",
+        bits,
+        by_bits,
+        title="Mean iterations by bits compared (b), log scale",
+        xlabel="Bits compared, b",
+        legend_title="Collisions",
+        log=True,
+    )
+
+
+def line_chart(
+    path: Path,
+    x: list[int],
+    series: dict[str, list[float]],
+    title: str,
+    xlabel: str,
+    legend_title: str,
+    log: bool = False,
+) -> None:
     # Imported here so worker processes don't pay for loading matplotlib.
     import matplotlib
 
     matplotlib.use("Agg")  # render to files, no window
     import matplotlib.pyplot as plt
+    from matplotlib.ticker import MaxNLocator
 
-    bits = list(means)
     fig, ax = plt.subplots(figsize=(8, 5), dpi=150)
-    for c in range(collisions):
-        ax.plot(bits, [means[b][c] for b in bits], marker="o", markersize=3, label=f"C = {c + 1}")
-    ax.set_yscale("log")
+    for label, values in series.items():
+        ax.plot(x, values, marker="o", markersize=3, label=label)
+    if log:
+        ax.set_yscale("log")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))  # b and C are whole numbers
     ax.yaxis.set_major_formatter(lambda value, _: f"{value:,.0f}")
-    ax.set_xlabel("Bits compared, b")
-    ax.set_ylabel("Mean iterations (log scale)")
-    ax.set_title("CHIP iterations by bits (b) and collisions (C)")
+    ax.set_title(title)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Mean iterations" + (" (log scale)" if log else ""))
     ax.grid(True, which="major", alpha=0.3)
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], labels[::-1], title="Collisions")  # top-to-bottom like the lines
+    ax.legend(handles[::-1], labels[::-1], title=legend_title)  # top-to-bottom like the lines
     fig.tight_layout()
     fig.savefig(path)
     plt.close(fig)
@@ -94,9 +140,9 @@ def plot(path: Path, means: dict[int, list[float]], collisions: int) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--min-bits", type=int, default=10)
+    parser.add_argument("--min-bits", type=int, default=1)
     parser.add_argument("--max-bits", type=int, default=32)
-    parser.add_argument("--collisions", type=int, default=8)
+    parser.add_argument("--collisions", type=int, default=20)
     parser.add_argument("--runs", type=int, default=1000)
     parser.add_argument("--workers", type=int, default=os.cpu_count())
     parser.add_argument("--out", type=Path, default=Path(__file__).parent / "results")
@@ -115,8 +161,8 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     write_csv(args.out / "iterations.csv", means, stds)
     write_markdown(args.out / "iterations.md", means, stds, args.collisions, args.runs)
-    plot(args.out / "iterations.png", means, args.collisions)
-    print(f"Wrote iterations.csv, iterations.md, iterations.png to {args.out}")
+    plot(args.out, means, args.collisions)
+    print(f"Wrote iterations.csv, iterations.md, and charts to {args.out}")
 
 
 if __name__ == "__main__":
