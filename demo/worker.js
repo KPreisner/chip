@@ -35,13 +35,14 @@ _logger = logging.getLogger("chip")
 _logger.addHandler(ForwardToPage())
 _logger.setLevel(logging.DEBUG)
 
-def run_hash(password, hash_name, bits, collisions, max_iterations):
+def run_hash(password, hash_name, bits, collisions, max_iterations, max_attempts):
     global _start
     chip = Chip(
         bits=bits,
         collisions=collisions,
         max_iterations=max_iterations,
         hash_func=HASH_FUNCS[hash_name],
+        max_attempts=max_attempts,
     )
     _start = time.perf_counter()
     encoded = hash_password(password, chip)
@@ -76,7 +77,9 @@ onmessage = async ({ data }) => {
   try {
     if (data.type === "hash") {
       const run = pyodide.globals.get("run_hash");
-      const result = run(data.password, data.hashName, data.bits, data.collisions, data.max);
+      const result = run(
+        data.password, data.hashName, data.bits, data.collisions, data.max, data.maxAttempts,
+      );
       const [encoded, ms] = result.toJs();
       result.destroy();
       run.destroy();

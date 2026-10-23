@@ -111,6 +111,7 @@
   .check { display: inline-flex; gap: 6px; align-items: center; font-weight: 400; margin: 0; }
   #status { margin: 14px 0 0; font-size: 14px; color: var(--text-2); min-height: 1.5em; }
   #status.error { color: var(--bad); }
+  .hint.warn { color: var(--bad); }
 
   .attempt { margin-bottom: 14px; }
   .attempt-head {
@@ -145,6 +146,13 @@
   .verdict.no { color: var(--bad); }
   .axis { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin: -6px 0 14px; }
   .empty { color: var(--muted); font-size: 14px; }
+  .failure {
+    border: 1px solid var(--bad);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--bad);
+    font-size: 14px;
+  }
 
   .stats {
     display: grid;
@@ -267,6 +275,9 @@
   const fmt = (n) => Math.round(n).toLocaleString("en-US");
 
   const DEFAULTS = { password: "hunter2", hashName: "sha256", bits: 20, collisions: 5, max: 4000 };
+  // A low max can make every salt fail. Give up after this many salts instead of the
+  // library's default of 1,000, which would take minutes to animate.
+  const MAX_ATTEMPTS = 10;
 
   const select = $("hash-name");
   for (const name of HASH_NAMES) select.add(new Option(name, name));
@@ -290,15 +301,24 @@
     $("bits-out").value = bits;
     $("collisions-out").value = c;
     const s = stats.get(`${bits},${c}`);
-    if (s && !maxEdited) {
-      $("max").value = Math.ceil((s.mean + s.std) / 10) * 10;
-      $("max-hint").textContent =
-        `Salts whose chain runs longer are rejected. Default: mean + 1σ (mean ${fmt(s.mean)}).`;
-    }
+    if (!s) return;
+    if (!maxEdited) $("max").value = Math.ceil((s.mean + s.std) / 10) * 10;
+    const max = +$("max").value;
+    const hint = $("max-hint");
+    let warning = "";
+    if (max < s.mean - s.std) warning = " Far below the mean: almost every salt will be rejected.";
+    else if (max < s.mean) warning = " Below the mean: most salts will be rejected.";
+    hint.textContent =
+      `Salts whose chain runs longer are rejected. Default: mean + 1σ (mean ${fmt(s.mean)}).` +
+      warning;
+    hint.className = warning ? "hint warn" : "hint";
   }
   $("bits").addEventListener("input", updateParams);
   $("collisions").addEventListener("input", updateParams);
-  $("max").addEventListener("input", () => (maxEdited = true));
+  $("max").addEventListener("input", () => {
+    maxEdited = true;
+    updateParams();
+  });
 
   // Restores the parameters (not the results). Max goes back to the benchmark-based
   // suggestion once the CSV has loaded, or to a fixed fallback before then.
@@ -360,7 +380,16 @@
     if (event.type === "done") {
       finish(event);
     } else if (event.type === "error") {
-      setStatus(event.message, true);
+      const noSalt = event.message.includes("no salt met the iteration bounds");
+      const message = noSalt ? noSaltMessage() : event.message;
+      setStatus(message, true);
+      if (noSalt) {
+        // Also show it under the bars, where the reader is looking.
+        const box = document.createElement("p");
+        box.className = "failure";
+        box.textContent = message;
+        $("attempts").append(box);
+      }
       $("run").disabled = false;
     }
     return 0;
@@ -405,6 +434,18 @@
     return 0;
   }
 
+  function noSaltMessage() {
+    const s = stats.get(`${run.bits},${run.collisions}`);
+    const typical = s
+      ? ` At b = ${run.bits} and C = ${run.collisions}, a chain needs about ${fmt(s.mean)} ` +
+        `iterations on average.`
+      : "";
+    return (
+      `None of the ${MAX_ATTEMPTS} salts finished within ${fmt(run.max)} iterations, ` +
+      `so no hash was stored.${typical} Raise Max iterations, or press Reset to defaults.`
+    );
+  }
+
   const pct = (iteration) => Math.min(100, (100 * iteration) / run.max);
 
   function addAttempt(n, salt) {
@@ -446,7 +487,9 @@
   $("form").addEventListener("submit", (e) => {
     e.preventDefault();
     const max = +$("max").value;
-    run = { max, attempts: 0, kept: 0, total: 0, current: null };
+    const bits = +$("bits").value;
+    const collisions = +$("collisions").value;
+    run = { max, bits, collisions, attempts: 0, kept: 0, total: 0, current: null };
     $("attempts").replaceChildren();
     $("log").textContent = "";
     $("result").hidden = true;
@@ -456,9 +499,10 @@
       type: "hash",
       password: $("password").value,
       hashName: select.value,
-      bits: +$("bits").value,
-      collisions: +$("collisions").value,
+      bits,
+      collisions,
       max,
+      maxAttempts: MAX_ATTEMPTS,
     });
   });
 
