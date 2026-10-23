@@ -69,6 +69,34 @@ The hash string records the salt and every parameter (in the style of the
 [PHC string format](https://github.com/P-H-C/phc-string-format)), so `verify` needs only
 the password and the stored string.
 
+## Command line
+
+`uv sync` also installs a `chip` command. Passwords are prompted for (without echo) when
+left off the command line.
+
+```sh
+$ PASSWORD=hunter2
+$ HASH=$(uv run chip hash "$PASSWORD" -b 20 --max 4000); echo "$HASH"
+$chip$h=sha256,b=20,c=5,min=0,max=4000$D4tvj5zpImPdw43O8TKZrA$BM3hGUyB80m/Ee2Apqlz3dCsrmtZFvydS4Qn5Mzr9GY
+
+$ uv run chip verify "$HASH" "$PASSWORD"    # exit code 0 = match
+match
+$ uv run chip verify "$HASH" hunter3        # exit code 1 = no match
+no match
+
+$ uv run chip trace "$PASSWORD" -b 20       # when each collision happens
+salt        71045097a43caeb3bcad316664fb60f8
+collision 1  at iteration 3,124
+collision 2  at iteration 3,411
+collision 3  at iteration 3,551
+collision 4  at iteration 3,595
+collision 5  at iteration 3,706
+total       3,706 iterations
+digest      cc0270ebfbf89c0f1fac13ee27ac96cde3b963ba4e8ce594e86f6323481ae1f3
+```
+
+Run `uv run chip <command> --help` for all options.
+
 ## Development
 
 | Tool | Purpose |
