@@ -28,3 +28,13 @@ tasks:
     desc: Run unit tests
     cmds:
       - uv run pytest {{.CLI_ARGS}}
+
+  bench:
+    desc: Quick benchmark (b 10–20, 100 runs) into benchmarks/results-quick/
+    cmds:
+      - uv run python benchmarks/iterations.py --max-bits 20 --runs 100 --out benchmarks/results-quick
+
+  bench-full:
+    desc: Full benchmark (b 10–32, 1,000 runs) into benchmarks/results/
+    cmds:
+      - uv run python benchmarks/iterations.py

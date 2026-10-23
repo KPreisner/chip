@@ -15,9 +15,8 @@ dist/
 .coverage
 htmlcov/
 
-# Benchmark output
-CHIP_mean_*.txt
-CHIP_std_*.txt
+# Benchmark output (quick runs only; full results are committed)
+benchmarks/results-quick/
 
 # Old / TODO
 old/

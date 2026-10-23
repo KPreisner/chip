@@ -1,7 +1,7 @@
 [project]
 name = "chip"
 version = "0.1.0"
-description = "CHIP (Confounding Hash Iteration for Passwords): an iterated, collision-driven password hash from a 2018 research paper."
+description = "CHIP (Confounding Hash Iteration for Passwords): an iterated, collision-driven password hash."
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -11,7 +11,9 @@ dependencies = []
 
 [dependency-groups]
 dev = ["ruff>=0.17", "mypy>=2.4", "pytest>=9.0"]
-bench = ["numpy>=2.0"]
+bench = [
+    "matplotlib>=3.11.2",
+]
 
 [build-system]
 requires = ["uv_build>=0.13.5,<0.14.0"]
@@ -32,7 +34,7 @@ select = ["E", "W", "F", "I", "B", "UP", "SIM", "N", "RUF"]
 [tool.mypy]
 python_version = "3.11"
 strict = true
-files = ["src", "tests"]
+files = ["src", "tests", "benchmarks"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
