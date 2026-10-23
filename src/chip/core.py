@@ -1,7 +1,7 @@
 """Core CHIP algorithm.
 
 CHIP iterates a hash function until it has seen `collisions` repeats among the low
-`bits` bits of the digests (the paper calls these parameters C and b). Each repeat
+`bits` bits of the digests (written C and b in formulas). Each repeat
 perturbs the chain by XOR-ing the current digest with the earlier digest it collided
 with, so computing the chain requires keeping every digest in memory.
 
@@ -54,10 +54,10 @@ class Chain:
 class Chip:
     """CHIP parameters.
 
-    Defaults follow the paper's recommendation (b = 32, C = 5, about 200,000 iterations
-    per chain on average), with SHA-256 instead of MD5 and an upper bound of roughly one
-    standard deviation above the mean. That bound rejects about 15% of salts, so a hash
-    costs about 235,000 iterations on average including retries.
+    Defaults: b = 32 and C = 5 (about 200,000 iterations per chain on average), SHA-256,
+    and an upper bound of roughly one standard deviation above the mean. That bound
+    rejects about 15% of salts, so a hash costs about 235,000 iterations on average
+    including retries.
     """
 
     def __init__(

@@ -40,8 +40,8 @@ def test_unicode_password() -> None:
 
 
 def test_hash_is_recomputable_after_salt_retries() -> None:
-    # Regression test: the 2018 code kept stored digests from rejected salts, so a
-    # hash produced after a retry could not be recomputed from its own salt.
+    # Each salt attempt must start from fresh state. If stored digests leaked from a
+    # rejected salt into the next attempt, the hash couldn't be recomputed from its salt.
     # b = 12, C = 5 averages about 200 iterations, so max = 200 rejects ~half the salts.
     retrying = Chip(bits=12, collisions=5, max_iterations=200)
     for i in range(20):
