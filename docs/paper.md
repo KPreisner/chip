@@ -4,6 +4,9 @@ Karl Preisner
 
 *Originally developed and written in 2018; revised in 2026.*
 
+▶️ **Live demo:** [kpreisner.github.io/chip](https://kpreisner.github.io/chip/) runs CHIP in
+your browser and shows each salt attempt and collision as it happens.
+
 ## Abstract
 
 In 2013, a group of cryptographers launched a public
@@ -272,11 +275,14 @@ purpose-built designs like Argon2id remain the right choice in practice.
 
 ## Try it
 
-From a clone of this repository: `HASH_NAME` is the hash function applied on every iteration, `BITS` is $b$, the number
-of low bits compared, and `COLLISIONS` is $C$, the number of repeats that end the
-chain. `MAX_ITERATIONS` is the upper bound: a salt whose chain runs longer is rejected,
-and hashing restarts with a new salt. `chip verify` prints `match`, and `--verbose` logs
-each salt attempt and collision as it happens.
+The quickest way is the [live demo](https://kpreisner.github.io/chip/), which runs the
+same library in your browser with no install.
+
+From a clone of this repository: `HASH_NAME` is the hash function applied on every
+iteration, `BITS` is $b$, the number of low bits compared, and `COLLISIONS` is $C$, the
+number of repeats that end the chain. `MAX_ITERATIONS` is the upper bound: a salt whose
+chain runs longer is rejected, and hashing restarts with a new salt. `chip verify`
+prints `match`, and `--verbose` logs each salt attempt and collision as it happens.
 
 ```sh
 uv sync
