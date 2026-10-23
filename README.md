@@ -11,8 +11,8 @@ fixed number of times, it keeps hashing until it has seen **C** collisions among
 in a way you can't predict without running the whole chain, and it forces the hasher to
 keep every digest in memory.
 
-📄 **Paper:** *Frustrating Brute-Force Password Recovery* (Karl Preisner, July 2018). A revised
-version is in progress.
+📄 **Paper:** [CHIP: Confounding Hash Iteration for Passwords](docs/paper.md), covering
+how it works, measured costs, and an honest security discussion.
 
 > [!WARNING]
 > This is research and portfolio code, not a production password hash. Use
@@ -164,8 +164,18 @@ The same checks run in GitHub Actions on every push and pull request.
 ## Project layout
 
 ```
-src/chip/       the CHIP package (standard library only)
-tests/          unit tests (pytest)
+src/chip/
+  core.py           the algorithm: Chip parameters, hash chain, collisions
+  passwords.py      hash_password and verify: salts, retries, stored hash strings
+  cli.py            the `chip` command
+tests/              unit tests (pytest)
+benchmarks/
+  iterations.py     measures iterations for every (b, C) pair
+  results/          committed results: CSV, Markdown tables, charts
+docs/
+  paper.md          how CHIP works, measured costs, security discussion
+.github/workflows/  CI: lint, and tests on Python 3.11–3.15
+Taskfile.yml        task shortcuts (see Development)
 ```
 
 ## License
