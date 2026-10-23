@@ -12,6 +12,9 @@ digests. That makes the iteration count depend on the password and salt in a way
 can't predict without running the whole chain, and each collision mixes in an earlier
 digest, so the hasher has to be able to recover earlier digests on demand.
 
+▶️ **Live demo:** [kpreisner.github.io/chip](https://kpreisner.github.io/chip/) runs the real
+library in your browser, showing each salt attempt and collision as it happens.
+
 📄 **Paper:** [CHIP: Confounding Hash Iteration for Passwords](docs/paper.md), covering
 how it works, measured costs, and its security limitations.
 
@@ -160,6 +163,7 @@ Run `uv run chip <command> --help` for all options.
 | `task bench` | quick benchmark run |
 | `task bench-full` | full iteration benchmark; regenerates the `iterations.*` results |
 | `task bench-memory` | memory benchmark; regenerates the `memory.*` results |
+| `task demo` | build the browser demo and serve it at http://localhost:8000 |
 
 The same checks run in GitHub Actions on every push and pull request.
 
@@ -176,9 +180,13 @@ benchmarks/
   memory.py                 measures memory for a range of (b, C) pairs
   time_memory_tradeoff.py   computes CHIP with about 4× less memory
   results/                  committed results: CSV, Markdown tables, charts
+demo/
+  index.html                the browser demo (GitHub Pages)
+  worker.js                 runs the chip package in Pyodide, off the main thread
+  build.sh                  assembles the site from the page, src/chip, and benchmark data
 docs/
   paper.md                  how CHIP works, measured costs, security discussion
-.github/workflows/          CI: lint, and tests on Python 3.11–3.15
+.github/workflows/          CI (lint, tests on Python 3.11–3.15) and the Pages deploy
 Taskfile.yml                task shortcuts (see Development)
 ```
 

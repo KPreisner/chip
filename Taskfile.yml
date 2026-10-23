@@ -30,16 +30,22 @@ tasks:
       - uv run pytest {{.CLI_ARGS}}
 
   bench:
-    desc: Quick benchmark (b 1–20, 100 runs) into benchmarks/results-quick/
+    desc: Quick benchmark (b 1-20, 100 runs) into benchmarks/results-quick/
     cmds:
       - uv run python benchmarks/iterations.py --max-bits 20 --runs 100 --out benchmarks/results-quick
 
   bench-full:
-    desc: Full benchmark (b 1–32, C 1–20, 1,000 runs) into benchmarks/results/
+    desc: Full benchmark (b 1-32, C 1-20, 1,000 runs) into benchmarks/results/
     cmds:
       - uv run python benchmarks/iterations.py
 
   bench-memory:
-    desc: Memory benchmark (b 24–34 × C 5–30, 100 runs) into benchmarks/results/
+    desc: Memory benchmark (b 24-34 x C 5-30, 100 runs) into benchmarks/results/
     cmds:
       - uv run python benchmarks/memory.py
+
+  demo:
+    desc: Build the browser demo and serve it at http://localhost:8000
+    cmds:
+      - sh demo/build.sh _site
+      - uv run python -m http.server 8000 --directory _site
