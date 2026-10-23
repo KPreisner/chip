@@ -1,0 +1,30 @@
+version: "3"
+
+tasks:
+  default:
+    cmds:
+      - task --list
+    silent: true
+
+  uv-sync:
+    desc: Install/update the virtual environment from uv.lock
+    cmds:
+      - uv sync
+
+  py-lint:
+    desc: Lint, check formatting, and type check (same as CI)
+    cmds:
+      - uv run ruff check
+      - uv run ruff format --check
+      - uv run mypy
+
+  py-format:
+    desc: Auto-format and apply safe lint fixes (incl. import sorting)
+    cmds:
+      - uv run ruff check --fix
+      - uv run ruff format
+
+  py-test:
+    desc: Run unit tests
+    cmds:
+      - uv run pytest {{.CLI_ARGS}}

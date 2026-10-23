@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual envs / uv
+.venv/
+
+# Tool caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Benchmark output
+CHIP_mean_*.txt
+CHIP_std_*.txt
+
+# Old / TODO
+old/
+TODO.md
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
