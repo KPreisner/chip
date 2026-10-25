@@ -37,6 +37,11 @@ until collisions == C
 return salt, SHA256(h)
 ```
 
+- **h** is the running value of the chain. It starts as `salt || password`, and after
+  each `SHA256` it holds the current digest. Each digest that doesn't collide is
+  remembered (`remember h`), building up the chain of earlier digests that later ones are
+  checked against.
+- **D_j** is the earlier digest in that chain whose low **b** bits match the current one.
 - **b** sets how many bits are compared. Each extra bit multiplies the work by about
   1.4 (√2).
 - **C** sets how many collisions to wait for. More collisions mean more iterations, with
