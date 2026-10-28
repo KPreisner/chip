@@ -4,7 +4,7 @@ Karl Preisner
 
 *Originally developed and written in 2018; revised in 2026.*
 
-▶️ **Live demo:** [kpreisner.github.io/chip](https://kpreisner.github.io/chip/) runs CHIP in
+▶️ **Live demo:** [karl.preisner.us/chip](https://karl.preisner.us/chip/) runs CHIP in
 your browser and shows each salt attempt and collision as it happens.
 
 ## Abstract
@@ -275,7 +275,7 @@ purpose-built designs like Argon2id remain the right choice in practice.
 
 ## Try it
 
-The quickest way is the [live demo](https://kpreisner.github.io/chip/), which runs the
+The quickest way is the [live demo](https://karl.preisner.us/chip/), which runs the
 same library in your browser with no install.
 
 From a clone of this repository: `HASH_NAME` is the hash function applied on every

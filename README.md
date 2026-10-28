@@ -12,7 +12,7 @@ digests. That makes the iteration count depend on the password and salt in a way
 can't predict without running the whole chain, and each collision mixes in an earlier
 digest, so the hasher has to be able to recover earlier digests on demand.
 
-▶️ **Live demo:** [kpreisner.github.io/chip](https://kpreisner.github.io/chip/) runs the real
+▶️ **Live demo:** [karl.preisner.us/chip](https://karl.preisner.us/chip/) runs the real
 library in your browser, showing each salt attempt and collision as it happens.
 
 📄 **Paper:** [CHIP: Confounding Hash Iteration for Passwords](docs/paper.md), covering
@@ -54,7 +54,7 @@ including retries.
 
 ## Quick start
 
-No install needed to try it: the [live demo](https://kpreisner.github.io/chip/) runs CHIP in
+No install needed to try it: the [live demo](https://karl.preisner.us/chip/) runs CHIP in
 your browser. To run it locally, you need [uv](https://docs.astral.sh/uv/).
 
 ```sh
