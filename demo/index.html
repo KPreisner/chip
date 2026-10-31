@@ -65,6 +65,21 @@
     font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
   }
   main { max-width: 1100px; margin: 0 auto; padding: 32px 16px 48px; }
+  .portfolio-bar {
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in srgb, var(--track) 40%, transparent);
+  }
+  .portfolio-bar div {
+    max-width: 1100px;
+    margin: 0 auto;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  .portfolio-bar a { color: var(--muted); text-decoration: none; transition: color 0.15s; }
+  .portfolio-bar a:hover, .portfolio-bar a:focus-visible { color: var(--text); }
   header h1 { margin: 0 0 4px; font-size: 26px; }
   header p { margin: 0 0 8px; color: var(--text-2); max-width: 70ch; }
   header nav { display: flex; gap: 16px; flex-wrap: wrap; font-size: 14px; }
@@ -191,6 +206,7 @@
 </style>
 </head>
 <body>
+<nav class="portfolio-bar" aria-label="Portfolio"><div><a href="https://karl.preisner.us">← Karl Preisner · portfolio</a></div></nav>
 <main>
   <header>
     <h1>CHIP: Confounding Hash Iteration for Passwords</h1>
