@@ -180,7 +180,7 @@ defaults ($b = 32$, $C = 5$, SHA-256):
 | Mean iterations per chain | about 200,000 (standard deviation about 45,000) |
 | Salts rejected by the default upper bound (250,000, about mean + 1σ) | about 15% |
 | Attempts per hash, including retries | about 1.2 |
-| Iterations per hash, including retries | about 235,000 |
+| Iterations per hash, including retries | about 230,000 |
 | Peak memory, this Python implementation (measured) | about 28 MB |
 | Memory for the raw digests alone, 32 bytes each (calculated) | about 6.4 MB |
 | Memory with the time–memory tradeoff below (calculated) | about 1.6 MB |
@@ -229,8 +229,8 @@ smaller than they first appear:
   iteration count, so a hash can only require more memory by also taking longer. At
   $b = 34$ and $C = 30$, about a million iterations, the digests take about 32 MB and
   the tradeoff about 8 MB
-  ([`benchmarks/results/memory.md`](../benchmarks/results/memory.md)). Argon2 and
-  scrypt, by contrast, set memory independently of time. An attacker writing in a
+  ([`benchmarks/results/memory.md`](../benchmarks/results/memory.md)). Argon2, by
+  contrast, sets memory and time separately. An attacker writing in a
   low-level language also avoids the overhead of a Python dictionary, which is why this
   implementation peaks at about 28 MB at the defaults.
 - **Iterations.** About 200,000 SHA-256 calls is also modest. OWASP recommends 600,000

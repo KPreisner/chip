@@ -44,8 +44,14 @@ tasks:
     cmds:
       - uv run python benchmarks/memory.py
 
-  demo:
-    desc: Build the browser demo and serve it at http://localhost:8000
+  bench-distribution:
+    desc: Iterations of 1,000 chains at b 32, C 5 into benchmarks/results/ (for the site's histograms)
+    cmds:
+      - uv run python benchmarks/distribution.py
+
+  site:
+    desc: Build the GitHub Pages site (demo and explainer) and serve it at http://localhost:8000
+    aliases: [demo]
     cmds:
       - sh demo/build.sh _site
       - uv run python -m http.server 8000 --directory _site

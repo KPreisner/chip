@@ -13,7 +13,8 @@ can't predict without running the whole chain, and each collision mixes in an ea
 digest, so the hasher has to be able to recover earlier digests on demand.
 
 ▶️ **Live demo:** [karl.preisner.us/chip](https://karl.preisner.us/chip/) runs the real
-library in your browser, showing each salt attempt and collision as it happens.
+library in your browser, showing each salt attempt and collision as it happens. Below it, an
+interactive explainer walks through how CHIP works, step by step.
 
 📄 **Paper:** [CHIP: Confounding Hash Iteration for Passwords](docs/paper.md), covering
 how it works, measured costs, and its security limitations.
@@ -49,7 +50,7 @@ return salt, SHA256(h)
 - If a salt needs more than an upper bound of iterations, a new random salt is drawn.
 
 With `b = 32, C = 5`, one chain takes about 200,000 iterations on average. The default upper
-bound (250,000) rejects about 15% of salts, so a full hash costs about 235,000 iterations
+bound (250,000) rejects about 15% of salts, so a full hash costs about 230,000 iterations
 including retries.
 
 ## Quick start
@@ -169,7 +170,8 @@ Run `uv run chip <command> --help` for all options.
 | `task bench` | quick benchmark run |
 | `task bench-full` | full iteration benchmark; regenerates the `iterations.*` results |
 | `task bench-memory` | memory benchmark; regenerates the `memory.*` results |
-| `task demo` | build the browser demo and serve it at http://localhost:8000 |
+| `task bench-distribution` | chain-length distribution at the defaults; regenerates `distribution.csv` |
+| `task site` | build the demo and explainer page and serve it at http://localhost:8000 |
 
 The same checks run in GitHub Actions on every push and pull request.
 
@@ -184,10 +186,13 @@ tests/                      unit tests (pytest)
 benchmarks/
   iterations.py             measures iterations for every (b, C) pair
   memory.py                 measures memory for a range of (b, C) pairs
+  distribution.py           records every chain's length at the defaults, for the explainer
   time_memory_tradeoff.py   computes CHIP with about 4× less memory
   results/                  committed results: CSV, Markdown tables, charts
 demo/
-  index.html                the browser demo (GitHub Pages)
+  index.html                the browser demo and explainer (GitHub Pages)
+  chain.js                  the CHIP chain in JavaScript, for the explainer's step-through widgets
+  explainer.js              the explainer's interactive widgets
   worker.js                 runs the chip package in Pyodide, off the main thread
   build.sh                  assembles the site from the page, src/chip, and benchmark data
 docs/

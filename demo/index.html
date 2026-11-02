@@ -22,6 +22,11 @@
     --bad: #c23535;
     --tick: #0b0b0b;
     --code-bg: #f0efec;
+    --hit: #eb6834;
+    --accent-2: #8db4e6;
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -39,6 +44,11 @@
       --bad: #e66767;
       --tick: #f0efec;
       --code-bg: #232322;
+    --hit: #e0703f;
+    --accent-2: #2c5c99;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
     }
   }
   :root[data-theme="dark"] {
@@ -56,6 +66,11 @@
     --bad: #e66767;
     --tick: #f0efec;
     --code-bg: #232322;
+    --hit: #e0703f;
+    --accent-2: #2c5c99;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
   }
   * { box-sizing: border-box; }
   body {
@@ -203,6 +218,119 @@
   details { margin-top: 16px; }
   summary { cursor: pointer; font-weight: 600; font-size: 14px; }
   footer { margin-top: 32px; color: var(--muted); font-size: 13px; }
+
+  /* --- Explainer below the demo --------------------------------------------------------- */
+  .page-break {
+    margin: 72px -16px 0;
+    padding: 56px 16px 40px;
+    border-top: 1px solid var(--border);
+    background: linear-gradient(var(--surface), var(--bg));
+    text-align: center;
+  }
+  .page-break .eyebrow { color: var(--muted); font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+                         letter-spacing: 0.08em; text-transform: uppercase; }
+  .page-break h2 { margin: 10px 0 8px; font-size: 30px; }
+  .page-break p { margin: 0 auto; color: var(--text-2); max-width: 60ch; }
+  .explainer { max-width: 920px; margin: 0 auto; font-size: 16px; line-height: 1.6; }
+  .explainer h2 { margin: 56px 0 4px; font-size: 22px; scroll-margin-top: 16px; }
+  .explainer h3 { margin: 26px 0 6px; font-size: 17px; }
+  .explainer p, .explainer li { max-width: 72ch; }
+  .explainer .takeaway {
+    margin: 6px 0 16px;
+    padding: 10px 14px;
+    border-left: 4px solid var(--accent);
+    background: var(--surface);
+    border-radius: 0 8px 8px 0;
+    color: var(--text);
+    max-width: none;
+  }
+  .explainer code, .explainer .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.9em; }
+  .explainer code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; }
+  .explainer pre { max-height: none; font-size: 14px; margin: 12px 0; }
+  .explainer pre code { background: none; padding: 0; }
+  .explainer .card { margin: 16px 0; padding: 16px; }
+  .explainer .card svg { display: block; width: 100%; height: auto; }
+  .explainer label { display: inline-flex; gap: 6px; align-items: center; font-weight: 400; margin: 0; }
+  .toc {
+    margin-top: 24px; padding: 14px 18px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px; font-size: 15px;
+  }
+  .toc ol { margin: 0; padding-left: 22px; columns: 2; column-gap: 32px; }
+  @media (max-width: 640px) { .toc ol { columns: 1; } }
+  .controls { display: flex; align-items: center; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .controls button, .options button { padding: 6px 14px; font-size: 14px; }
+  .step-count { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+  .caption { margin: 10px 0 0; min-height: 3.2em; max-width: none !important; }
+  .caption .sub { color: var(--text-2); }
+  .options { display: flex; gap: 10px 18px; flex-wrap: wrap; align-items: center; margin-top: 12px;
+             font-size: 14px; color: var(--text-2); }
+  .options label { flex-wrap: wrap; }
+  .options input[type="range"] { width: 160px; max-width: 100%; }
+  .options input[type="text"] { width: 12em; padding: 4px 8px; }
+  .options select { width: auto; padding: 4px 8px; }
+  .options output { font-variant-numeric: tabular-nums; color: var(--text); min-width: 2ch; }
+  .explainer table { border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+  .explainer th, .explainer td { padding: 4px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+  .explainer th { color: var(--text-2); font-weight: 600; }
+  .scroll { overflow-x: auto; }
+  .explainer .stats { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin: 14px 0 0; }
+  .explainer .stat .value { font-variant-numeric: tabular-nums; }
+  .viz { position: relative; }
+  .legend { display: flex; gap: 6px 16px; flex-wrap: wrap; font-size: 13px; color: var(--text-2); margin-bottom: 6px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+  .tip {
+    position: absolute; pointer-events: none; z-index: 2; min-width: 150px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 10px; font-size: 13px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  }
+  .tip .tip-title { color: var(--text-2); margin-bottom: 4px; }
+  .tip .tip-row { display: flex; align-items: center; gap: 8px; }
+  .tip .tip-row b { font-variant-numeric: tabular-nums; min-width: 5.5em; }
+  .tip .tip-row span { color: var(--text-2); }
+  .tip i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .viz details { margin-top: 8px; font-size: 14px; }
+  .viz summary { cursor: pointer; color: var(--text-2); font-weight: 400; }
+  .viz details table { margin-top: 6px; }
+  .terms dt { font-weight: 600; margin-top: 14px; scroll-margin-top: 16px; }
+  .terms dd { margin: 2px 0 0; color: var(--text-2); max-width: 72ch; }
+  .muted { color: var(--muted); }
+  .small { font-size: 12px; }
+  .digest { overflow-wrap: anywhere; word-break: break-all; }
+  .kv { display: grid; gap: 2px; margin: 10px 0; }
+  .kv .k { font-size: 13px; color: var(--text-2); }
+  .hash-group { margin-bottom: 12px; }
+  .group-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .hash-row { display: grid; grid-template-columns: 52px 1fr; gap: 0 10px; padding: 6px 0;
+              border-bottom: 1px solid var(--border); font-size: 13px; }
+  .hash-row .who { grid-row: span 2; font-weight: 600; }
+  .hash-row .digest.same { color: var(--bad); }
+  .lowbit, .lowhex { color: var(--accent); font-weight: 700; background: color-mix(in srgb, var(--accent) 14%, transparent); }
+  .bits { letter-spacing: 0.04em; }
+  .chain-layout { display: grid; gap: 16px; }
+  @media (min-width: 760px) { .chain-layout { grid-template-columns: 260px 1fr; align-items: start; } }
+  .chain-layout svg[data-grid] { max-width: 260px; margin: 0 auto; }
+  .chain-table { width: 100%; font-size: 13px !important; }
+  .chain-table tr.is-hit td { color: var(--hit); }
+  .chain-table tr.is-current td { font-weight: 700; }
+  .xor { margin-top: 10px; padding: 8px 10px; background: var(--code-bg); border-radius: 6px; font-size: 13px;
+         overflow-wrap: anywhere; }
+  .xor .lbl { display: inline-block; width: 3.5em; color: var(--text-2); }
+  .xor .rule { border-top: 1px solid var(--muted); margin-top: 2px; padding-top: 2px; color: var(--hit); }
+  .hint.ok { color: var(--good); }
+  .bar-row { display: grid; grid-template-columns: 150px 1fr 64px; gap: 10px; align-items: center;
+             font-size: 13px; color: var(--text-2); padding: 3px 0; }
+  .bar-row.on { color: var(--text); font-weight: 600; }
+  .bar { height: 12px; background: var(--track); border-radius: 4px; overflow: hidden; }
+  .bar span { display: block; height: 100%; background: var(--accent); }
+  .bar-row:not(.on) .bar span { opacity: 0.4; }
+  .bar-value { text-align: right; font-variant-numeric: tabular-nums; }
+  .anatomy { display: flex; flex-wrap: wrap; gap: 2px; font: 14px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .anatomy span { padding: 4px 6px; border-radius: 4px; background: var(--code-bg); }
+  .anatomy span b { display: block; font: 600 11px/1.3 system-ui, sans-serif; color: var(--text-2); }
+  .compare td:first-child { font-weight: 600; }
+  .compare tr.chip td { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .draft { border: 1px dashed var(--hit); border-radius: 8px; padding: 2px 14px; }
 </style>
 </head>
 <body>
@@ -219,6 +347,7 @@
     <nav>
       <a href="https://github.com/KPreisner/chip">Source on GitHub</a>
       <a href="https://github.com/KPreisner/chip/blob/main/docs/paper.md">Paper</a>
+      <a href="#how">How it works, step by step ↓</a>
     </nav>
   </header>
 
@@ -253,7 +382,7 @@
 
     <section class="card" aria-labelledby="attempts-title">
       <h2 id="attempts-title">Salt attempts</h2>
-      <div id="attempts"><p class="empty">Press Hash to start. Each bar is one salt's chain, each mark a collision.</p></div>
+      <div id="attempts"><p class="empty">Loading Python… The first hash runs as soon as it's ready. Each bar is one salt's chain, each mark a collision.</p></div>
 
       <div id="result" hidden>
         <div class="stats">
@@ -277,6 +406,542 @@
       </details>
     </section>
   </div>
+
+  <!-- Explainer ------------------------------------------------------------------------- -->
+  <div class="page-break" id="how">
+    <div class="eyebrow">Explainer</div>
+    <h2>How CHIP works, step by step</h2>
+    <p>The demo above runs CHIP. The rest of this page explains it from the ground up: why
+      password hashes are slow on purpose, the birthday paradox that sets CHIP's cost, what
+      each step of the chain does, and where the design falls short.</p>
+  </div>
+
+  <article class="explainer">
+  <nav class="toc" aria-label="Sections">
+    <ol>
+      <li><a href="#why-slow">Why password hashes are slow on purpose</a></li>
+      <li><a href="#phc">What the Password Hashing Competition asked for</a></li>
+      <li><a href="#low-bits">Digests and low bits</a></li>
+      <li><a href="#birthday">The birthday paradox</a></li>
+      <li><a href="#chain">The CHIP chain, step by step</a></li>
+      <li><a href="#perturbation">Why the XOR forces memory</a></li>
+      <li><a href="#bounds">Salts, bounds, and retries</a></li>
+      <li><a href="#cost">Parameters and cost</a></li>
+      <li><a href="#limits">Attacks and limitations</a></li>
+      <li><a href="#retro">Looking back from 2026</a></li>
+      <li><a href="#method">Methodology</a></li>
+      <li><a href="#terms">Terms and references</a></li>
+    </ol>
+  </nav>
+
+  <noscript><p class="card">The widgets below need JavaScript. The
+    <a href="https://github.com/KPreisner/chip/blob/main/docs/paper.md">paper</a> covers the same
+    material with static charts.</p></noscript>
+
+  <!-- 1 -->
+  <section>
+  <h2 id="why-slow">1. Why password hashes are slow on purpose</h2>
+  <p class="takeaway">A stolen password database is attacked offline, so the only defense left is
+    making each guess expensive.</p>
+  <p>A website never needs your password itself, only a way to check it. So it stores a
+    <a href="#t-hash">hash</a> of the password: a fixed-size fingerprint that is easy to compute
+    and practically impossible to reverse. At login it hashes what you typed and compares.</p>
+  <p>If the database leaks, the attacker has the hashes. They can't reverse them, but they can
+    <strong>guess</strong>: hash "123456", "password", "hunter2", … and look for a match. Nobody
+    can rate-limit this; it runs on the attacker's own hardware. Each guess costs one run of the
+    password hash, so <strong>the cost of one hash is the cost of one guess</strong>.</p>
+  <p>General-purpose hashes such as SHA-256 are designed to be fast: one high-end gaming GPU (an
+    RTX 4090) computes about 21 billion SHA-256 hashes per second in
+    <a href="https://hashcat.net/forum/post-56468.html">hashcat's benchmark</a>. That is good for checking files and bad for passwords. A
+    password hash deliberately makes each run expensive.</p>
+
+  <h3>Salts: the same password, different hashes</h3>
+  <p>A <a href="#t-salt">salt</a> is a random value stored next to each hash and mixed into it.
+    Without one, everyone who chose "hunter2" has the same hash, so the attacker cracks them all
+    at once, or looks the hash up in a precomputed table. With a salt, each user's hash has to
+    be attacked separately. A salt does <em>not</em> make a single guess any slower. Making each
+    guess slower is what the rest of this page is about.</p>
+  <div class="card" id="w-salt">
+    <div data-view aria-live="polite"></div>
+    <div class="options">
+      <label>Password <input type="text" data-password value="hunter2" spellcheck="false"></label>
+      <button type="button" data-new>New salts</button>
+    </div>
+  </div>
+  </section>
+
+  <!-- 2 -->
+  <section>
+  <h2 id="phc">2. What the Password Hashing Competition asked for</h2>
+  <p class="takeaway">Make each guess cost time, memory, or an unpredictable amount of time.
+    CHIP tries all three.</p>
+  <p>From 2013 to 2015 the <a href="https://www.password-hashing.net">Password Hashing
+    Competition</a> (PHC) collected new designs; <a href="#t-argon2">Argon2</a> won. The entries
+    use three levers, often together:</p>
+  <ul>
+    <li><strong>More iterations.</strong> Hash many times in a row. Simple, but an attacker with
+      a GPU runs thousands of guesses side by side.</li>
+    <li><strong>More memory.</strong> GPUs and custom chips have thousands of cores but little
+      fast memory per core. If each guess needs megabytes, far fewer guesses fit at once.</li>
+    <li><strong>Unpredictable run time.</strong> A GPU runs threads in
+      <a href="#t-warp">lockstep groups</a> of 32. If guesses take different amounts of time,
+      the fast ones sit idle until the slowest in their group finishes.</li>
+  </ul>
+  <p>CHIP's run time is set by when random collisions happen (section 4), so it varies from guess
+    to guess. Below, each bar is one password guess on one GPU lane, with its length taken from
+    real CHIP chains at the defaults. A group of 32 starts together and can't move on until its
+    slowest guess is done. Watch the grey: that is time lanes spend waiting.</p>
+  <div class="card" id="w-lockstep">
+    <svg data-view viewBox="0 0 640 316" role="img" aria-label="32 GPU lanes running CHIP guesses"></svg>
+    <p class="caption" data-caption aria-live="polite"></p>
+    <div class="options"><button type="button" data-new>New guesses</button></div>
+  </div>
+  <p>That waiting is the cost CHIP's variable run time adds for a GPU attacker. Each lever turns
+    out weaker than it first looks; <a href="#limits">section 9</a> shows how an attacker gets
+    this one back.</p>
+  </section>
+
+  <!-- 3 -->
+  <section>
+  <h2 id="low-bits">3. Digests and low bits</h2>
+  <p class="takeaway">A digest is 256 random-looking bits; CHIP looks only at the last b of
+    them.</p>
+  <p>SHA-256 turns any input into a 32-byte (256-bit) <a href="#t-digest">digest</a>, usually
+    written as 64 hex digits. Change one character of the input and the whole digest changes,
+    with no visible pattern. So its bits behave like coin flips.</p>
+  <p>CHIP reads only the <strong>low b bits</strong>: the last b bits of the digest, read as a
+    number. We'll write this as:</p>
+  <pre><code>low_b_bits(h) = h mod 2^b        # keep only the last b bits</code></pre>
+  <p>There are only 2<sup>b</sup> possible values, so they repeat far sooner than whole digests
+    ever would.</p>
+  <div class="card" id="w-lowbits">
+    <div data-view aria-live="polite"></div>
+    <div class="options">
+      <label>Input <input type="text" data-text value="hunter2" spellcheck="false"></label>
+      <label>b <input type="range" data-bits min="1" max="32" value="8"> <output data-bits-out></output></label>
+    </div>
+  </div>
+  </section>
+
+  <!-- 4 -->
+  <section>
+  <h2 id="birthday">4. The birthday paradox</h2>
+  <p class="takeaway">Among 2<sup>b</sup> possible values, a repeat shows up after about
+    √(2<sup>b</sup>) tries, not 2<sup>b</sup>.</p>
+  <p>In a room of 23 people, there is a better than even chance that two share a birthday, even
+    though there are 365 days. The reason is pairs: 23 people make 23 × 22 / 2 = 253 pairs, and
+    each pair has a 1 in 365 chance of matching. The number of pairs grows like the square of the
+    number of people, so matches arrive much sooner than intuition says.</p>
+  <p>The same happens with b-bit values. Drawing random values into 2<sup>b</sup> boxes, the
+    first <a href="#t-collision">collision</a> (a value that was already drawn) comes after
+    about</p>
+  <pre><code>√(π/2 · 2^b) ≈ 1.25 · 2^(b/2) draws</code></pre>
+  <p>At b = 32 that is about 82,000 draws out of 4.3 billion possible values, and the benchmark
+    measured 81,000.</p>
+  <div class="card" id="w-birthday">
+    <svg data-view viewBox="0 0 480 120" role="img" aria-label="Random values filling boxes" style="max-width:480px;margin:0 auto"></svg>
+    <p class="caption" data-caption aria-live="polite"></p>
+    <div class="controls" data-controls></div>
+    <div class="options">
+      <label>b
+        <select data-bits>
+          <option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option>
+        </select></label>
+      <button type="button" data-new>New draws</button>
+      <button type="button" data-trials>Run 1,000 trials</button>
+    </div>
+    <svg data-hist role="img" aria-label="Histogram of first-collision times"></svg>
+    <p class="caption sub" data-hist-caption aria-live="polite" style="min-height:0"></p>
+  </div>
+
+  <h3>A rule of thumb for C collisions</h3>
+  <p>CHIP waits for C collisions, not one. After T draws there are about T²/2 pairs, and each
+    matches with probability 1/2<sup>b</sup>, so the expected number of collisions is about
+    T² / (2 · 2<sup>b</sup>). Setting that equal to C and solving for T:</p>
+  <pre><code>T ≈ √(2 · C · 2^b)</code></pre>
+  <p>This one formula explains how both parameters behave:</p>
+  <ul>
+    <li><strong>Each extra bit multiplies the work by √2 ≈ 1.41</strong>, because doubling
+      2<sup>b</sup> multiplies its square root by √2.</li>
+    <li><strong>More collisions add work with diminishing returns</strong>, because T grows like
+      √C: 4 times the collisions only doubles the iterations.</li>
+  </ul>
+  <p>Against the measured means it is within about 4% for C ≥ 5 (b = 32, C = 5: predicted
+    207,000, measured 200,000). It overestimates for C = 1 by about 15%, where the exact
+    √(π/2 · 2<sup>b</sup>) above applies.</p>
+  </section>
+
+  <!-- 5 -->
+  <section>
+  <h2 id="chain">5. The CHIP chain, step by step</h2>
+  <p class="takeaway">Hash, check the low bits, remember the digest or perturb with the earlier
+    one, repeat until C collisions, then hash once more.</p>
+  <pre><code>h = salt ‖ password
+repeat:
+    h = SHA256(h)                       # this is D<sub>i</sub>
+    if low_b_bits(h) was seen before (as the low bits of D<sub>j</sub>):
+        collisions += 1
+        h = h XOR D<sub>j</sub>                    # perturb with the earlier full digest
+    else:
+        remember h under its low b bits
+until collisions == C
+return salt, SHA256(h)</code></pre>
+  <p>Names used from here on: <strong>D<sub>i</sub></strong> is the digest produced at iteration i; its low
+    b bits are <strong>L<sub>i</sub></strong>. A <strong>collision</strong> is an iteration whose L<sub>i</sub> equals
+    the low bits of an earlier, remembered digest D<sub>j</sub>. CHIP stores each remembered digest in a
+    table keyed by its low bits. Step through a real chain, small enough to see every
+    iteration:</p>
+  <div class="card" id="w-chain">
+    <div class="chain-layout">
+      <svg data-grid role="img" aria-label="Table of remembered low-bit values"></svg>
+      <div data-view aria-live="polite"></div>
+    </div>
+    <p class="caption" data-caption aria-live="polite"></p>
+    <div class="controls" data-controls></div>
+    <div class="options">
+      <label>Password <input type="text" data-password value="hunter2" spellcheck="false"></label>
+      <label>b <select data-bits><option selected>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
+      <label>C <select data-c><option>1</option><option>2</option><option selected>3</option><option>4</option></select></label>
+      <button type="button" data-new>New salt</button>
+      <button type="button" data-example>Example salt</button>
+    </div>
+    <p class="hint small">Salt <span class="mono" data-salt></span></p>
+  </div>
+  <p>Each box in the grid is one possible low-bit value, and shows the iteration whose digest it
+    holds. Two details to notice:</p>
+  <ul>
+    <li>The first iteration can never collide, because nothing has been remembered yet. That is
+      why <code>max_iterations</code> must be greater than C.</li>
+    <li>After the last collision CHIP hashes once more, so the final XOR affects the output.</li>
+  </ul>
+  <p>This is the "confounding" in CHIP's name. The number of iterations depends on exactly when
+    each collision lands, and the only way to find out is to run the chain. Change one character
+    of the password or salt and every digest changes, so every collision moves. Press
+    <strong>New salt</strong> above to see it.</p>
+  </section>
+
+  <!-- 6 -->
+  <section>
+  <h2 id="perturbation">6. Why the XOR forces memory</h2>
+  <p class="takeaway">XOR-ing in the <em>full</em> earlier digest means the hasher must be able to
+    get D<sub>j</sub> back, so it has to keep the chain's digests (or recompute them).</p>
+  <p>Think like an attacker checking one guess against a stolen hash, and ask what they could
+    skip. Compare three versions of what a collision does:</p>
+  <div class="card" id="w-perturb">
+    <div class="options" style="margin-top:0">
+      <label><input type="radio" name="variant" data-variant value="none"> No perturbation</label>
+      <label><input type="radio" name="variant" data-variant value="flip"> Flip one bit</label>
+      <label><input type="radio" name="variant" data-variant value="xor" checked> XOR with D<sub>j</sub> (CHIP)</label>
+    </div>
+    <div data-view aria-live="polite"></div>
+  </div>
+  <ul>
+    <li><strong>No perturbation:</strong> the chain is just SHA-256 applied over and over;
+      collisions only decide where it stops. The attacker doesn't care where: they hash, check
+      the result against the stolen hash, and repeat. No memory at all.</li>
+    <li><strong>Flip one bit:</strong> now the chain changes at each collision, so the attacker
+      must notice collisions, which means remembering every low-bit value seen. That is b bits per
+      iteration.</li>
+    <li><strong>XOR with D<sub>j</sub>:</strong> the chain depends on the other 224 bits of the earlier
+      digest too, so the attacker must be able to produce any earlier digest on demand. Keeping
+      them all is 32 bytes per iteration, eight times the previous row at b = 32.</li>
+  </ul>
+  <p>Whatever is kept belongs to one password and salt, so it can't be shared between guesses.
+    Keeping every digest is not the only way to get D<sub>j</sub> back, though; <a href="#limits">section
+    9</a> shows a cheaper one.</p>
+  </section>
+
+  <!-- 7 -->
+  <section>
+  <h2 id="bounds">7. Salts, bounds, and retries</h2>
+  <p class="takeaway">Chain lengths vary a lot, so CHIP throws away a salt whose chain runs too
+    long and tries a new one.</p>
+  <p>At the defaults (b = 32, C = 5), a chain takes about 200,000 iterations on average, with a
+    standard deviation of about 45,000. Some salts would take far longer. So CHIP sets an
+    <strong>upper bound</strong>: if a chain hasn't reached C collisions by then, it draws a new
+    salt and starts again from scratch. The red bars in the demo above are exactly these rejected
+    salts. An optional <strong>lower bound</strong> (off by default) works the same way, so no
+    password ends up with a suspiciously cheap hash.</p>
+  <p>The demo at the top starts at b = 20, about 3,000 iterations, so it finishes instantly in a
+    browser. The library's default is b = 32, and the numbers in this section use that.</p>
+  <p>Where to put the bound is a tradeoff. Drag it:</p>
+  <div class="card" id="w-bound">
+    <svg data-view viewBox="0 0 640 210" role="img" aria-label="Histogram of chain lengths with the upper bound"></svg>
+    <div class="options">
+      <label>Upper bound <input type="range" data-max min="120000" max="340000" step="1000" value="250000">
+        <output data-max-out></output></label>
+    </div>
+    <div class="stats" data-stats></div>
+    <p class="caption" data-caption aria-live="polite"></p>
+  </div>
+  <p>The default, 250,000, is about the mean plus one standard deviation: it rejects about 15% of
+    salts, so a hash costs about 1.2 chains, or 230,000 iterations, including retries. A bound at
+    the mean would reject half of all salts.</p>
+
+  <h3>The stored string</h3>
+  <p>The result records the salt and every parameter, in the style of the
+    <a href="https://github.com/P-H-C/phc-string-format">PHC string format</a>, so
+    <code>verify</code> needs only the password and this string:</p>
+  <div class="anatomy" aria-label="Parts of a stored CHIP hash">
+    <span><b>scheme</b>$chip$</span>
+    <span><b>hash</b>h=sha256,</span>
+    <span><b>bits</b>b=32,</span>
+    <span><b>collisions</b>c=5,</span>
+    <span><b>bounds</b>min=0,max=250000</span>
+    <span><b>salt (base64)</b>$SOXeJ7iDuFTAnzpA54YPoA</span>
+    <span><b>final digest (base64)</b>$jtbB33Sm…</span>
+  </div>
+  <p>To verify, CHIP reruns one chain with the stored salt and compares the result. No retries are
+    needed, because the stored salt is the one that was accepted.</p>
+  <p><strong>That creates a small asymmetry.</strong> The defender pays about 1.2 chains per hash
+    because of retries. An attacker who stole the string knows the winning salt and pays exactly
+    one chain per guess.</p>
+  </section>
+
+  <!-- 8 -->
+  <section>
+  <h2 id="cost">8. Parameters and cost</h2>
+  <p class="takeaway">b sets the scale (× 1.41 per bit), C fine-tunes it (diminishing returns),
+    and memory grows with the iteration count.</p>
+  <p>The benchmark ran 1,000 chains with no upper bound for every b from 1 to 32 and every C from 1 to 20.
+    Each cell is one mean; darker means more iterations, on a log scale. Hover over a cell:</p>
+  <div class="card" id="w-heatmap">
+    <svg data-view role="img" aria-label="Mean iterations for every b and C"></svg>
+    <p class="caption" data-caption aria-live="polite"></p>
+  </div>
+  <p>The color mostly changes with b, because b sets the scale. C's effect is easier to see one
+    b at a time:</p>
+  <div class="card viz" id="w-by-c">
+    <div class="legend" data-legend></div>
+    <svg data-view role="img" aria-label="Mean iterations by collisions C, for b = 28, 30 and 32"></svg>
+    <p class="caption" style="min-height:0">Each extra collision adds a little less than the last,
+      because iterations grow like √C. Two more bits double the whole curve.</p>
+    <details><summary>Show the data</summary><div class="scroll" data-table></div></details>
+  </div>
+  <p>At the defaults:</p>
+  <div class="scroll">
+  <table>
+    <tr><th>Measure</th><th>Value</th></tr>
+    <tr><td>Mean iterations per chain</td><td>about 200,000 (standard deviation about 45,000)</td></tr>
+    <tr><td>Salts rejected by the default bound</td><td>about 15%</td></tr>
+    <tr><td>Iterations per hash, including retries</td><td>about 230,000</td></tr>
+    <tr><td>Raw digests, 32 bytes each (calculated)</td><td>about 6.4 MB</td></tr>
+    <tr><td>Peak memory of this Python implementation (measured)</td><td>about 28 MB</td></tr>
+    <tr><td>Time per hash, this Python implementation</td><td>about 0.2 s</td></tr>
+  </table>
+  </div>
+  <p>The Python number is over four times the raw digests because every Python integer and
+    dictionary entry carries overhead. An attacker writing in C pays only for the raw bytes, so
+    6.4 MB is the honest figure.</p>
+  <div class="card viz" id="w-memory">
+    <div class="legend" data-legend></div>
+    <svg data-view role="img" aria-label="Memory per chain by chain length"></svg>
+    <p class="caption" style="min-height:0">Memory per chain against its length, for b from 24 to
+      34 and C from 5 to 30 (100 chains each). The Python peak is measured; raw digests (32 bytes
+      each) and the tradeoff (section 9) are calculated. All three grow roughly in proportion to
+      the iteration count: CHIP can only use more memory by also taking longer.</p>
+    <details><summary>Show the data</summary><div class="scroll" data-table></div></details>
+  </div>
+  </section>
+
+  <!-- 9 -->
+  <section>
+  <h2 id="limits">9. Attacks and limitations</h2>
+  <p class="takeaway">CHIP makes each guess cost something, but less than it first appears, which
+    is why Argon2id is the right choice in practice.</p>
+
+  <h3>The time–memory tradeoff</h3>
+  <p>Look at how the stored digests are used. All 200,000 are written, but a full digest is only
+    ever <em>read</em> at a collision, and there are just C = 5 collisions per chain. Everything
+    else only needs the low bits, to notice collisions.</p>
+  <p>So an attacker can keep just the iteration number at which each low-bit value first
+    appeared, plus a full digest every 1,000 iterations as a <a href="#t-checkpoint">checkpoint</a>.
+    When a collision needs D<sub>j</sub>, they jump back to the nearest checkpoint before j and re-hash
+    forward:</p>
+  <div class="card" id="w-replay">
+    <svg data-view viewBox="0 0 640 140" role="img" aria-label="Recovering an earlier digest from a checkpoint"></svg>
+    <p class="caption" data-caption aria-live="polite"></p>
+    <div class="controls" data-controls></div>
+  </div>
+  <p>Each recovery costs half the checkpoint spacing on average, and there are only C of them.
+    <code>benchmarks/time_memory_tradeoff.py</code> runs this and checks that the output is
+    identical: at the defaults it costs about 1.3% more hashing and needs about 1.6 MB instead of
+    6.4 MB. Try other spacings:</p>
+  <div class="card" id="w-tradeoff">
+    <svg data-view role="img" aria-label="Memory versus extra hashing for different checkpoint spacings"></svg>
+    <div class="options">
+      <label>Parameters
+        <select data-preset>
+          <option value="24,5">b = 24, C = 5</option>
+          <option value="28,5">b = 28, C = 5</option>
+          <option value="32,5" selected>b = 32, C = 5 (defaults)</option>
+          <option value="32,30">b = 32, C = 30</option>
+          <option value="34,30">b = 34, C = 30</option>
+        </select></label>
+      <label>Checkpoint every <input type="range" data-spacing min="1" max="5" step="0.05" value="3">
+        <output data-spacing-out></output> iterations</label>
+    </div>
+    <div class="stats" data-stats></div>
+    <p class="caption" data-caption aria-live="polite"></p>
+  </div>
+  <p>The saving levels off at about four times, because each stored value shrinks from a 32-byte
+    digest to an 8-byte key and index. For short chains (b = 24) a spacing of 1,000 costs 19% more
+    hashing, but an attacker would simply choose a smaller spacing. <a href="#t-argon2">Argon2</a>
+    was designed to make tradeoffs like this expensive: it reads earlier memory at every step,
+    not five times per run.</p>
+
+  <h3>Parallelism</h3>
+  <p>Separate guesses are independent, so an attacker can still run many at once. The waiting from
+    <a href="#phc">section 2</a> is also easy to avoid, with two counter-moves:</p>
+  <ul>
+    <li><strong>Refill finished lanes.</strong> Every iteration of every guess does the same work
+      (hash, take the low bits, look them up), so a lane that finishes can start the next guess
+      right away while its neighbors carry on. Nothing waits.</li>
+    <li><strong>Drop guesses past the upper bound.</strong> The right password always finishes
+      within the bound stored in the hash string, so a chain that runs longer can't be the right
+      one and can be abandoned.</li>
+  </ul>
+  <div class="card" id="w-lockstep-attack">
+    <svg data-view viewBox="0 0 640 316" role="img" aria-label="32 GPU lanes with attacker counter-moves"></svg>
+    <p class="caption" data-caption aria-live="polite"></p>
+    <div class="options">
+      <label>Attacker strategy
+        <select data-mode>
+          <option value="wait">Wait for the slowest guess</option>
+          <option value="refill" selected>Refill finished lanes</option>
+        </select></label>
+      <label><input type="checkbox" data-abandon> Drop guesses past the upper bound</label>
+      <button type="button" data-new>New guesses</button>
+    </div>
+  </div>
+
+  <h3>Memory is small and tied to time</h3>
+  <p>6.4 MB per guess is small next to current guidance:
+    <a href="https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html">OWASP</a>
+    recommends at least 19 MiB for Argon2id, and <a href="https://www.rfc-editor.org/rfc/rfc9106">RFC 9106</a>
+    recommends 64 MiB to 2 GiB. CHIP's memory also grows only with its iteration count, so it
+    can't ask for more memory without also taking longer. At b = 34 and C = 30, about a million
+    iterations, the digests take about 32 MB.</p>
+
+  <h3>Iterations are modest</h3>
+  <p>200,000 SHA-256 calls is less hashing than OWASP's recommendation for PBKDF2: 600,000
+    iterations of HMAC-SHA256, each costing two SHA-256 compressions, about six times as much.</p>
+
+  <h3>Side channels</h3>
+  <p>CHIP's run time and memory access pattern depend on the password. Someone sharing the
+    machine could learn something from timing or cache behavior. Argon2d has the same weakness;
+    Argon2id was designed to reduce it.</p>
+
+  <h3>How it compares</h3>
+  <div class="scroll">
+  <table class="compare">
+    <tr><th></th><th>Cost knobs</th><th>Memory</th><th>Password-dependent memory access</th><th>Status</th></tr>
+    <tr><td><a href="#t-pbkdf2">PBKDF2</a></td><td>iterations</td><td>negligible</td><td>no</td><td>standardized; OWASP: 600,000 iterations</td></tr>
+    <tr><td><a href="#t-bcrypt">bcrypt</a></td><td>cost factor</td><td>fixed, about 4 KB</td><td>yes</td><td>still acceptable for existing systems</td></tr>
+    <tr><td><a href="#t-scrypt">scrypt</a></td><td>N (memory and time together), r, p</td><td>tunable</td><td>yes</td><td>acceptable</td></tr>
+    <tr><td><a href="#t-argon2">Argon2id</a></td><td>time, memory, and parallelism, each separate</td><td>tunable</td><td>partly, by design</td><td>recommended (RFC 9106, OWASP)</td></tr>
+    <tr class="chip"><td>CHIP</td><td>b and C; memory follows iterations</td><td>tied to time; about 4× tradeoff</td><td>yes</td><td>research and teaching only</td></tr>
+  </table>
+  </div>
+  </section>
+
+  <!-- 10 -->
+  <section>
+  <h2 id="retro">10. Looking back from 2026</h2>
+  <p class="takeaway">The ideas make good teaching material; a real design would decouple memory
+    from time and read memory far more often.</p>
+  <div class="draft">
+  <p>I first built CHIP in 2018 and revisited it in 2026. What I'd keep:</p>
+  <ul>
+    <li><strong>Cost from the birthday bound.</strong> Two small integers give smooth,
+      predictable control over the average cost, with a one-line formula behind it.</li>
+    <li><strong>Building on SHA-256</strong> rather than a new primitive, so the security of each
+      step rests on a well-studied hash.</li>
+    <li><strong>Self-describing hash strings</strong>, so parameters can change without breaking
+      old hashes.</li>
+  </ul>
+  <p>What I'd change:</p>
+  <ul>
+    <li><strong>Read memory more often.</strong> CHIP writes every digest but reads a full one only
+      C times, which is why checkpoints make the memory cheap to avoid. Reading an earlier digest
+      at every step, chosen by the data, would make each recovery expensive.</li>
+    <li><strong>Set memory and time separately.</strong> Fill a memory region of chosen size first,
+      then spend a chosen number of steps reading from it. That is essentially what scrypt and
+      Argon2 do.</li>
+    <li><strong>Don't count on variable run time.</strong> It costs the defender retries and
+      side-channel exposure, and an attacker refilling lanes barely notices it.</li>
+  </ul>
+  <p>For a real system, I'd use Argon2id.</p>
+  </div>
+  </section>
+
+  <!-- Methodology -->
+  <section>
+  <h2 id="method">Methodology</h2>
+  <ul>
+    <li>Every CHIP measurement on this page comes from a committed script in
+      <a href="https://github.com/KPreisner/chip/tree/main/benchmarks"><code>benchmarks/</code></a>:
+      <code>iterations.py</code> (1,000 chains for each b from 1 to 32 and C from 1 to 20),
+      <code>distribution.py</code> (1,000 chains at the defaults, used by the lockstep and bound
+      widgets), <code>memory.py</code> (100 chains per row), and
+      <code>time_memory_tradeoff.py</code> (checks that the low-memory method gives identical
+      hashes).</li>
+    <li>The step-through widgets hash with your browser's SHA-256 (WebCrypto), so they respond
+      instantly. The chain widget's example chain is also pinned in the Python tests, so the two must agree. The demo at the top runs the actual Python library through
+      Pyodide.</li>
+    <li>The tradeoff widget uses a simple model (half the spacing per recovery, 8 bytes per stored
+      value); its caption compares it with the measured result.</li>
+    <li>Not measured here: real GPU attack throughput, a C implementation, or side channels.</li>
+  </ul>
+  </section>
+
+  <!-- Terms -->
+  <section>
+  <h2 id="terms">Terms and references</h2>
+  <dl class="terms">
+    <dt id="t-hash">Hash function, password hash</dt>
+    <dd>A hash function maps any input to a fixed-size output that is easy to compute and
+      infeasible to reverse (SHA-256: 32 bytes). A password hash is a hash built to be slow and
+      costly on purpose.</dd>
+    <dt id="t-digest">Digest</dt>
+    <dd>The output of one hash function call. CHIP's chain produces D<sub>1</sub>, D<sub>2</sub>, …</dd>
+    <dt id="t-salt">Salt</dt>
+    <dd>A random value (16 bytes in CHIP) stored with the hash and mixed into it, so equal
+      passwords get different hashes and precomputed tables don't help.</dd>
+    <dt id="t-collision">Collision (in CHIP)</dt>
+    <dd>An iteration whose low b bits equal those of an earlier remembered digest. The full
+      digests differ; only their low bits match.</dd>
+    <dt id="t-birthday">Birthday bound</dt>
+    <dd>Among N equally likely values, the first repeat is expected after about √(πN/2) draws.
+      <a href="https://en.wikipedia.org/wiki/Birthday_problem">Birthday problem</a>.</dd>
+    <dt id="t-xor">XOR</dt>
+    <dd>Bitwise exclusive or: each output bit is 1 when exactly one input bit is 1. XOR with a
+      random value scrambles every bit it touches.</dd>
+    <dt id="t-warp">Lockstep, warp</dt>
+    <dd>A GPU runs threads in groups (warps of 32 on NVIDIA hardware) that execute the same
+      instruction together. A thread with nothing left to do waits for the rest of its warp.</dd>
+    <dt id="t-checkpoint">Checkpoint, time–memory tradeoff</dt>
+    <dd>Keeping some intermediate values and recomputing the rest when needed, trading extra
+      computation for less memory.</dd>
+    <dt id="t-pbkdf2">PBKDF2</dt>
+    <dd>Iterates HMAC many times; cost comes from iterations alone.
+      <a href="https://www.rfc-editor.org/rfc/rfc8018#section-5.2">RFC 8018</a>.</dd>
+    <dt id="t-bcrypt">bcrypt</dt>
+    <dd>Based on the Blowfish cipher's expensive key setup, with a small fixed memory (about 4 KB).
+      <a href="https://www.usenix.org/legacy/events/usenix99/provos/provos.pdf">Provos and Mazières, 1999</a>.</dd>
+    <dt id="t-scrypt">scrypt</dt>
+    <dd>Fills a large memory region, then reads it back at data-dependent positions.
+      <a href="https://www.rfc-editor.org/rfc/rfc7914">RFC 7914</a>.</dd>
+    <dt id="t-argon2">Argon2 (Argon2d, Argon2i, Argon2id)</dt>
+    <dd>Winner of the Password Hashing Competition in 2015, with separate time, memory, and
+      parallelism settings. Argon2id mixes data-independent and data-dependent memory access and
+      is the recommended variant. <a href="https://www.rfc-editor.org/rfc/rfc9106">RFC 9106</a>.</dd>
+    <dt id="t-phc">PHC string format</dt>
+    <dd>A convention for self-describing hash strings: <code>$scheme$params$salt$hash</code>.
+      <a href="https://github.com/P-H-C/phc-string-format">Specification</a>.</dd>
+  </dl>
+  </section>
+  </article>
 
   <footer>
     Research code, not a production password hash. For real systems, use Argon2id.
@@ -363,6 +1028,8 @@
       $("run").disabled = false;
       setStatus("Ready.");
       $("python-version").textContent = `Running Python ${data.python} via Pyodide.`;
+      // Hash once with the current parameters, so the page opens with a run to look at.
+      $("form").requestSubmit();
     } else if (data.type === "fatal") {
       setStatus(`Could not load Python: ${data.message}`, true);
     } else if (data.type === "verified") {
@@ -539,5 +1206,6 @@
     }
   });
 </script>
+<script type="module" src="explainer.js"></script>
 </body>
 </html>

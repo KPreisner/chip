@@ -60,7 +60,7 @@ class Chip:
 
     Defaults: b = 32 and C = 5 (about 200,000 iterations per chain on average), SHA-256,
     and an upper bound of roughly one standard deviation above the mean. That bound
-    rejects about 15% of salts, so a hash costs about 235,000 iterations on average
+    rejects about 15% of salts, so a hash costs about 230,000 iterations on average
     including retries.
     """
 
