@@ -68,3 +68,12 @@ def test_first_collision_matches_birthday_bound() -> None:
     firsts = [chip.compute(secrets.token_bytes(16), bounded=False).iterations for _ in range(500)]
     expected = math.sqrt(math.pi / 2 * 2**bits)
     assert statistics.mean(firsts) == pytest.approx(expected, rel=0.15)
+
+
+def test_explainer_example_chain() -> None:
+    # The worked example in the demo page's explainer (demo/explainer.js, EXAMPLE). The page
+    # recomputes this chain with the browser's SHA-256, so the two must agree.
+    salt = bytes.fromhex("5c1e4a9b7f0362d8e1a74c2b90f3d65e")
+    chain = Chip(bits=4, collisions=3).compute(salt + b"hunter2", bounded=False)
+    assert chain.collision_iterations == (9, 11, 12)
+    assert chain.digest.hex() == "063a918a4bcd790bf964fdaf7d64ad03ec5fef6b85bcbc21fe02ceb12f4e7093"
